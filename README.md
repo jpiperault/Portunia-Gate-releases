@@ -1,82 +1,94 @@
 # Heimdia
 
-**Le bastion SSH de [Portunia](https://github.com/jpiperault/Portunia-releases).**
-Les utilisateurs passent par Heimdia pour atteindre les serveurs : Heimdia vérifie qui ils sont, décide où ils peuvent aller, fournit si besoin le compte du serveur sans le leur montrer, enregistre les sessions et trace tout dans un journal infalsifiable.
+**English** · [Français](README.fr.md)
 
-## Ce que fait Heimdia
+**The SSH and Remote Desktop bastion of [Portunia](https://github.com/jpiperault/Portunia-releases).**
+Users go through Heimdia to reach servers: Heimdia checks who they are, decides where they may go, supplies the server account when needed without ever showing it, records sessions and keeps a tamper-evident audit log.
+
+## What Heimdia does
 
 | | |
 |---|---|
-| **Trois modes par serveur** | **Rebond** : relais de bout en bout (`ssh -J`), le bastion journalise la connexion sans voir son contenu. **Enregistré** : le bastion relaie et enregistre la session ; l'utilisateur tape ses propres identifiants. **Coffre** : comme Enregistré, et le bastion fournit le compte du serveur, que l'utilisateur ne connaît jamais. |
-| **Double authentification** | Mot de passe, clé SSH et code TOTP (Google Authenticator, Microsoft Authenticator…), combinables au choix. Un code ne sert qu'une fois. |
-| **Droits** | Des règles relient un groupe à des serveurs, avec jours, heures, date d'expiration, SFTP et tunnels autorisés ou non. Tout ce qui n'est pas permis est refusé. |
-| **Enregistrement** | Format asciicast, affichage seul ou aussi la frappe selon la règle. Chaque fichier est signé par le bastion. |
-| **Journal d'audit** | Connexions, échecs, sessions, changements d'administration. Chaque événement contient l'empreinte du précédent : une ligne supprimée ou modifiée se voit. |
-| **Portunia** | Le bastion s'ajoute dans la barre latérale, ses serveurs s'ouvrent d'un clic, et les administrateurs gèrent tout depuis Portunia Équipes. |
-| **Autres clients** | N'importe quel client SSH : OpenSSH, PuTTY, MobaXterm, WinSCP (SFTP). |
+| **Three modes per server** | **Jump**: end-to-end relay; the bastion logs the connection without seeing its content. **Recorded**: the bastion relays and records the session; users type their own credentials. **Vault**: like Recorded, and the bastion supplies the server account, which the user never knows. |
+| **Two-factor sign-in** | Password, SSH key and TOTP code (Google Authenticator, Microsoft Authenticator…), in any combination. A code works only once. |
+| **Permissions** | Rules link a group to servers, with days, hours, an expiry date, and SFTP and tunnels allowed or not. Anything not allowed is denied. |
+| **Recording and replay** | Every session in Vault or Recorded mode is recorded and signed. In Portunia, replay it like a video: keystrokes as subtitles, idle time skipped, sensitive commands highlighted, search across all sessions. Typed passwords are masked; every replay is logged. |
+| **Audit log** | Each event contains the fingerprint of the previous one: a deleted or edited line shows. |
+| **Remote Desktop** | Windows servers (RDP) behind the bastion, from Portunia or the browser. |
+| **Web portal** | For people without Portunia at hand: sign-in, terminal and Remote Desktop in the browser, behind Cloudflare, with no open port. Turned on or off with one click in Portunia. |
+| **Portunia** | The bastion appears in Portunia's sidebar; its servers open with one click; administrators and auditors manage everything from Portunia Teams. |
+| **Other clients** | Any SSH client: OpenSSH, PuTTY, MobaXterm, WinSCP (SFTP). |
 
-## Installer
+## Install
 
-**Serveur** : Debian 12 ou 13, Ubuntu 22.04 ou suivantes, processeur x86-64. 1 processeur, 2 Go de mémoire et 10 Go de disque suffisent. Une machine virtuelle ou un container LXC conviennent (rien à activer).
+**Server**: Debian 12 or 13, Ubuntu 22.04 or later, x86-64 processor. 1 CPU, 2 GB RAM and 10 GB of disk are enough. A virtual machine or an LXC container is fine (nothing to enable).
 
 ```bash
 curl -fsSLO https://github.com/jpiperault/Heimdia-releases/releases/latest/download/installer.sh
 sudo bash installer.sh
 ```
 
-L'assistant télécharge la dernière version, vérifie son empreinte SHA-256, installe le paquet et PostgreSQL, puis pose cinq questions (la touche Entrée garde la valeur proposée) :
+The wizard downloads the latest version, checks its SHA-256 fingerprint, installs the package and PostgreSQL, then asks five questions (Enter keeps the suggested value):
 
-| Question | Valeur proposée |
+| Question | Suggested value |
 |---|---|
-| Nom du bastion | Heimdia |
-| Identifiant de l'administrateur | admin |
-| Port SSH | 2222 |
-| Port de l'API (utilisée par Portunia) | 8443 |
-| Fuseau horaire | celui du serveur |
+| Bastion name | Heimdia |
+| Administrator login | admin |
+| SSH port | 2222 |
+| API port (used by Portunia) | 8443 |
+| Time zone | the server's |
 
-Il crée ensuite les clés, le certificat, la base et le compte administrateur, démarre le bastion et affiche ce qu'il faut saisir dans Portunia : **adresse**, **empreinte du certificat**, **identifiant** et **mot de passe provisoire**. Le bastion redémarre seul avec le serveur.
+It then creates the keys, the certificate, the database and the administrator account, starts the bastion and shows what to enter in Portunia: **address**, **certificate fingerprint**, **login** and **temporary password**. The bastion restarts on its own with the server, and restarts by itself if it ever stops responding.
 
-### Sauvegarder la clé du coffre, tout de suite
+### Back up the vault key, right away
 
-La clé du coffre chiffre les mots de passe des serveurs et les codes TOTP : sans elle, une restauration perd tous ces secrets. L'assistant en dépose une copie dans votre dossier personnel (`~/heimdia-coffre.key`) et affiche les commandes pour la copier sur votre poste puis l'effacer du serveur. Rangez-la dans un gestionnaire de mots de passe ou le coffre de l'entreprise.
+The vault key encrypts server passwords and TOTP secrets: without it, a restore loses all those secrets. The wizard puts a copy in your home folder (`~/heimdia-coffre.key`) and shows the commands to copy it to your computer and delete it from the server. Keep it in a password manager or the company vault.
 
-### Relancer l'assistant
+### Running the wizard again
 
 | | |
 |---|---|
-| `sudo bash installer.sh` | Menu : informations, mise à jour, administrateur de secours |
-| `sudo bash installer.sh info` | Adresse et empreinte à donner aux utilisateurs |
-| `sudo bash installer.sh mise-a-jour` | Installe la dernière version et redémarre (**les sessions ouvertes sont coupées**) |
-| `sudo bash installer.sh admin julien` | Crée un administrateur de secours avec un mot de passe provisoire |
-| `sudo bash installer.sh --paquet heimdia_X.Y.Z_amd64.deb` | Installe un paquet téléchargé à l'avance (serveur sans Internet) |
+| `sudo bash installer.sh` | Menu: information, update, backup administrator, web portal |
+| `sudo bash installer.sh info` | Address and fingerprint to give to users |
+| `sudo bash installer.sh mise-a-jour` | Installs the latest version and restarts (**open sessions are cut**) |
+| `sudo bash installer.sh admin julien` | Creates a backup administrator with a temporary password |
+| `sudo bash installer.sh portail` | Installs Cloudflare Tunnel for the web portal |
+| `sudo bash installer.sh --paquet heimdia_X.Y.Z_amd64.deb` | Installs a package downloaded beforehand (server without Internet) |
 
-Sans terminal (automatisation), l'assistant prend les valeurs proposées ou celles des variables `HEIMDIA_NOM`, `HEIMDIA_ADMIN`, `HEIMDIA_SSH_PORT`, `HEIMDIA_API_PORT` et `TZ`.
+Without a terminal (automation), the wizard uses the suggested values or those of the `HEIMDIA_NOM`, `HEIMDIA_ADMIN`, `HEIMDIA_SSH_PORT`, `HEIMDIA_API_PORT` and `TZ` variables.
 
-Le guide d'exploitation (sauvegarde, journaux, dépannage) est installé avec le paquet : `/usr/share/doc/heimdia/exploitation.md`.
+The operations guide (backups, logs, troubleshooting) is installed with the package: `/usr/share/doc/heimdia/operations.md`.
 
-## Ajouter le bastion dans Portunia
+## Adding the bastion to Portunia
 
-1. Portunia › **Extensions** › Heimdia › **Activer** : la section **Bastions** apparaît dans la barre latérale.
-2. Bastions › **+** › tapez l'adresse donnée par l'assistant.
-3. Comparez l'empreinte affichée par Portunia à celle de l'assistant (ou `sudo heimdia info` sur le serveur). Si elle diffère, n'allez pas plus loin.
-4. Identifiant et mot de passe provisoire ; **laissez le champ Code vide**.
-5. Choisissez votre mot de passe, scannez le code QR avec votre application d'authentification et tapez le code qu'elle affiche.
-6. Les serveurs autorisés apparaissent sous le bastion ; un clic ouvre la session.
-7. Administration (Portunia Équipes) : menu **⋯** du bastion › **Administrer** : serveurs et coffre, comptes, groupes, règles, journal, sessions, réglages.
+1. Portunia › **Extensions** › Heimdia › **Enable**: the **Bastions** section appears in the sidebar.
+2. Bastions › **+** › type the address given by the wizard.
+3. Compare the fingerprint shown by Portunia with the wizard's (or `sudo heimdia info` on the server). If it differs, stop.
+4. Login and temporary password; **leave the Code field empty**.
+5. Choose your password, scan the QR code with your authenticator app and type the code it shows.
+6. Allowed servers appear under the bastion; one click opens the session.
+7. Administration (Portunia Teams): bastion **⋯** menu › **Administer**: servers and vault, accounts, groups, rules, web portal, settings. Audit: bastion **⋯** menu › **Audit**: sessions and log.
 
-## Se connecter sans Portunia
+## Web portal
+
+1. In Cloudflare Zero Trust › Networks › Tunnels, create a tunnel (Cloudflared) and copy its token.
+2. On the bastion: `sudo bash installer.sh portail`, then paste the token.
+3. In the tunnel's *Public Hostname* tab: your address, type **HTTP**, URL `localhost:8445`.
+4. In Portunia: Administer › **Web portal**: public address, allowed group, then the switch. Cloudflare Access in front of the address is recommended.
+
+## Connecting without Portunia
 
 ```bash
-ssh -p 2222 julien@bastion              # menu des serveurs autorisés
-ssh -p 2222 julien%web-01@bastion       # directement sur web-01
-ssh -J julien@bastion:2222 admin@fw-01  # rebond de bout en bout
-sftp -P 2222 julien%web-01@bastion      # fichiers (mode coffre, si la règle l'autorise)
+ssh -p 2222 julien@bastion              # menu of allowed servers
+ssh -p 2222 julien%web-01@bastion       # straight to web-01
+ssh -J julien@bastion:2222 admin@fw-01  # end-to-end jump
+sftp -P 2222 julien%web-01@bastion      # files (Vault mode, if the rule allows it)
 ```
 
-## Signaler un problème
+## Reporting a problem
 
-Ouvrez une [issue](https://github.com/jpiperault/Heimdia-releases/issues) avec la version (`sudo heimdia info`), ce que vous faisiez et le message affiché (`sudo journalctl -u heimdia -n 50` pour le journal du service).
+Open an [issue](https://github.com/jpiperault/Heimdia-releases/issues) with the version (`sudo heimdia info`), what you were doing and the message shown (`sudo journalctl -u heimdia -n 50` for the service log).
 
 ---
 
-© Heimdia. Tous droits réservés.
+© Heimdia. All rights reserved. Heimdia relies on open-source software (russh, IronRDP, xterm.js…), under MIT and Apache 2.0 licences.
