@@ -28,7 +28,7 @@ curl -fsSLO https://github.com/jpiperault/Heimdia-releases/releases/latest/downl
 sudo bash installer.sh
 ```
 
-The wizard downloads the latest version, checks its SHA-256 fingerprint, installs the package and PostgreSQL, then asks five questions (Enter keeps the suggested value):
+The wizard downloads the latest version, checks its SHA-256 fingerprint, installs the package and PostgreSQL, then asks five questions (Enter keeps the suggested value): The wizard, the bastion and the web portal speak English, or French when the system or the browser is in French.
 
 | Question | Suggested value |
 |---|---|
@@ -50,10 +50,10 @@ The vault key encrypts server passwords and TOTP secrets: without it, a restore 
 |---|---|
 | `sudo bash installer.sh` | Menu: information, update, backup administrator, web portal |
 | `sudo bash installer.sh info` | Address and fingerprint to give to users |
-| `sudo bash installer.sh mise-a-jour` | Installs the latest version and restarts (**open sessions are cut**) |
+| `sudo bash installer.sh update` | Installs the latest version and restarts (**open sessions are cut**) |
 | `sudo bash installer.sh admin julien` | Creates a backup administrator with a temporary password |
-| `sudo bash installer.sh portail` | Installs Cloudflare Tunnel for the web portal |
-| `sudo bash installer.sh --paquet heimdia_X.Y.Z_amd64.deb` | Installs a package downloaded beforehand (server without Internet) |
+| `sudo bash installer.sh portal` | Installs Cloudflare Tunnel for the web portal |
+| `sudo bash installer.sh --package heimdia_X.Y.Z_amd64.deb` | Installs a package downloaded beforehand (server without Internet) |
 
 Without a terminal (automation), the wizard uses the suggested values or those of the `HEIMDIA_NOM`, `HEIMDIA_ADMIN`, `HEIMDIA_SSH_PORT`, `HEIMDIA_API_PORT` and `TZ` variables.
 
@@ -72,7 +72,7 @@ The operations guide (backups, logs, troubleshooting) is installed with the pack
 ## Web portal
 
 1. In Cloudflare Zero Trust › Networks › Tunnels, create a tunnel (Cloudflared) and copy its token.
-2. On the bastion: `sudo bash installer.sh portail`, then paste the token.
+2. On the bastion: `sudo bash installer.sh portal`, then paste the token.
 3. In the tunnel's *Public Hostname* tab: your address, type **HTTP**, URL `localhost:8445`.
 4. In Portunia: Administer › **Web portal**: public address, allowed group, then the switch. Cloudflare Access in front of the address is recommended.
 

@@ -28,7 +28,7 @@ curl -fsSLO https://github.com/jpiperault/Heimdia-releases/releases/latest/downl
 sudo bash installer.sh
 ```
 
-L'assistant télécharge la dernière version, vérifie son empreinte SHA-256, installe le paquet et PostgreSQL, puis pose cinq questions (la touche Entrée garde la valeur proposée) :
+L'assistant télécharge la dernière version, vérifie son empreinte SHA-256, installe le paquet et PostgreSQL, puis pose cinq questions (la touche Entrée garde la valeur proposée) : L'assistant, le bastion et le portail web parlent français quand le système ou le navigateur est en français, anglais sinon.
 
 | Question | Valeur proposée |
 |---|---|
