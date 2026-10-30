@@ -28,7 +28,7 @@ curl -fsSLO https://github.com/jpiperault/Heimdia-releases/releases/latest/downl
 sudo bash installer.sh
 ```
 
-L'assistant télécharge la dernière version, vérifie son empreinte SHA-256, installe le paquet et PostgreSQL, puis pose cinq questions (la touche Entrée garde la valeur proposée) : L'assistant, le bastion et le portail web parlent français quand le système ou le navigateur est en français, anglais sinon.
+L'assistant télécharge la dernière version, vérifie son empreinte SHA-256, installe le paquet et PostgreSQL, puis pose cinq questions (la touche Entrée garde la valeur proposée) :
 
 | Question | Valeur proposée |
 |---|---|
@@ -56,6 +56,8 @@ La clé du coffre chiffre les mots de passe des serveurs et les codes TOTP : san
 | `sudo bash installer.sh --paquet heimdia_X.Y.Z_amd64.deb` | Installe un paquet téléchargé à l'avance (serveur sans Internet) |
 
 Sans terminal (automatisation), l'assistant prend les valeurs proposées ou celles des variables `HEIMDIA_NOM`, `HEIMDIA_ADMIN`, `HEIMDIA_SSH_PORT`, `HEIMDIA_API_PORT` et `TZ`.
+
+L'assistant, le bastion et le portail web parlent français quand le système ou le navigateur est en français, anglais sinon.
 
 Le guide d'exploitation (sauvegarde, journaux, dépannage) est installé avec le paquet : `/usr/share/doc/heimdia/exploitation.fr.md`.
 

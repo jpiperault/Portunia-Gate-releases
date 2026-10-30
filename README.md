@@ -28,7 +28,7 @@ curl -fsSLO https://github.com/jpiperault/Heimdia-releases/releases/latest/downl
 sudo bash installer.sh
 ```
 
-The wizard downloads the latest version, checks its SHA-256 fingerprint, installs the package and PostgreSQL, then asks five questions (Enter keeps the suggested value): The wizard, the bastion and the web portal speak English, or French when the system or the browser is in French.
+The wizard downloads the latest version, checks its SHA-256 fingerprint, installs the package and PostgreSQL, then asks five questions (Enter keeps the suggested value):
 
 | Question | Suggested value |
 |---|---|
@@ -56,6 +56,8 @@ The vault key encrypts server passwords and TOTP secrets: without it, a restore 
 | `sudo bash installer.sh --package heimdia_X.Y.Z_amd64.deb` | Installs a package downloaded beforehand (server without Internet) |
 
 Without a terminal (automation), the wizard uses the suggested values or those of the `HEIMDIA_NOM`, `HEIMDIA_ADMIN`, `HEIMDIA_SSH_PORT`, `HEIMDIA_API_PORT` and `TZ` variables.
+
+The wizard, the bastion and the web portal speak English, or French when the system or the browser is in French.
 
 The operations guide (backups, logs, troubleshooting) is installed with the package: `/usr/share/doc/heimdia/operations.md`.
 
