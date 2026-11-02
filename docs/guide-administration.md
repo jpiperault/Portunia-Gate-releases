@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.21.0 · Portunia 0.56.0 · Mise à jour : 2 novembre 2026*
+*Portunia Gate 0.22.0 · Portunia 0.62.0 · Mise à jour : 2 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md).
 
@@ -151,7 +151,7 @@ sudo systemctl restart portunia-gate
 
 | Sujet | À savoir |
 | --- | --- |
-| Installation | Installateur Windows (NSIS) **par utilisateur** : pas besoin de droits d'administrateur sur le poste. Téléchargement : `github.com/jpiperault/Portunia-releases`, dernière version. |
+| Installation | Installateur Windows (NSIS) : **pour l'utilisateur** (sans droits d'administrateur) ou **pour tous les utilisateurs du poste** (Program Files, droits d'administrateur, conseillé sur les postes partagés et les serveurs de rebond). Les mises à jour gardent le mode choisi ; en mode « tous », Windows demande l'autorisation à chaque mise à jour. Les données restent propres à chaque compte Windows. Téléchargement : `github.com/jpiperault/Portunia-releases`, dernière version. |
 | Mises à jour | Paramètres › Mises à jour : vérification au démarrage (activée par défaut), une bannière propose la nouvelle version, rien ne s'installe sans accord. Le paquet est signé, Portunia vérifie la signature avant d'installer. |
 | Extensions à activer | **Portunia Gate** (section Gates), **Bureau à distance** (sinon les serveurs RDP restent grisés), **Assistance à distance** pour les dépanneurs. Menu Extensions de la barre latérale. |
 | Licence | Paramètres › Licence : coller le texte reçu par e-mail. Vérifiée hors ligne, sans compte en ligne. L'édition s'affiche en bas de la barre latérale. Administrer et Audit demandent **Équipes**. |
@@ -194,8 +194,8 @@ Un code ne sert qu'une fois : le même code à 6 chiffres est refusé s'il a dé
 | Bouton | Effet | Commande |
 | --- | --- | --- |
 | Modifier | Rôle, connexion, groupes, désactivation. | `user role`, `user disable` |
-| Mot de passe provisoire | Nouveau mot de passe à transmettre ; **ferme les sessions Portunia** du compte. Pour un mot de passe oublié. | `user passwd` |
-| Réinitialiser le code | Téléphone perdu ou changé : l'utilisateur enrôlera un nouveau code à sa prochaine connexion. | `user totp` |
+| Mot de passe provisoire | Nouveau mot de passe à transmettre ; **ferme toutes les sessions du compte** : Portunia, portail web et sessions ouvertes. Pour un mot de passe oublié ou volé. | `user passwd` |
+| Réinitialiser le code | Téléphone perdu ou changé : l'utilisateur enrôlera un nouveau code à sa prochaine connexion. Ferme aussi toutes ses sessions. | `user totp` |
 | Clé SSH | Ajoute une clé publique (`ssh-ed25519 AAAA…`) ; Portunia affiche son empreinte. | `user key` |
 | Supprimer | Efface le compte ; l'historique de ses sessions et le journal sont gardés. | `user delete` |
 
@@ -238,7 +238,7 @@ Administrer › **Serveurs et coffre** › **Ajouter un serveur**. Chaque modifi
 | Protocole | SSH ou Bureau à distance (RDP). Le port passe à 22 ou 3389 tant que vous ne l'avez pas changé. |
 | Nom | Sans espace (`web-01`) : c'est aussi le nom à taper avec un client SSH (`julien%web-01@gate`). |
 | Dossier | Range les serveurs sous la Gate dans Portunia (Production, Recette, Réseau…). |
-| Adresse, Port | Telles que le **Gate** les joint (adresse interne). |
+| Adresse, Port | Telles que la Gate les joint (adresse interne). Changer l'adresse d'un serveur qui a un secret dans le coffre oblige à **ressaisir le secret** : un jeton d'administration volé ne suffit pas à l'envoyer vers une autre machine. Le journal note l'ancienne et la nouvelle adresse. Les adresses de métadonnées des hébergeurs cloud (`169.254.169.254`…) sont refusées. |
 | Mode | Rebond, enregistré ou coffre (ci-dessous). |
 | Compte sur le serveur | Obligatoire en coffre. En Bureau à distance : `DOMAINE\compte`, proposé à l'ouverture. |
 | Secret du coffre | En coffre seulement : *Générer une clé et l'installer*, *Mot de passe du compte*, *Clé privée existante* (sans phrase de passe). En modification : *Garder le secret actuel*. |
