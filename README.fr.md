@@ -5,7 +5,7 @@
 **La passerelle SSH et Bureau à distance de [Portunia](https://github.com/jpiperault/Portunia-releases).**
 Les utilisateurs passent par la Gate pour atteindre les serveurs : la Gate vérifie qui ils sont, décide où ils peuvent aller, fournit si besoin le compte du serveur sans jamais le montrer, enregistre les sessions et tient un journal d'audit infalsifiable.
 
-> Portunia Gate s'appelait **Heimdia** jusqu'à la version 0.12. Commandes, paquet, service et variables s'appellent désormais `portunia-gate` / `PORTUNIA_GATE_*`.
+> Portunia Gate s'appelait **Heimdia** jusqu'à la version 0.11 (les anciennes versions ci-dessous gardent ce nom). Commandes, paquet, service et variables s'appellent désormais `portunia-gate` / `PORTUNIA_GATE_*`.
 
 ## Ce que fait la Gate
 

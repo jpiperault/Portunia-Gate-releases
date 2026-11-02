@@ -5,7 +5,7 @@
 **The SSH and Remote Desktop gateway of [Portunia](https://github.com/jpiperault/Portunia-releases).**
 Users go through the Gate to reach servers: the Gate checks who they are, decides where they may go, supplies the server account when needed without ever showing it, records sessions and keeps a tamper-evident audit log.
 
-> Portunia Gate was called **Heimdia** until version 0.12. Commands, package, service and variables are now named `portunia-gate` / `PORTUNIA_GATE_*`.
+> Portunia Gate was called **Heimdia** until version 0.11 (older releases below keep that name). Commands, package, service and variables are now named `portunia-gate` / `PORTUNIA_GATE_*`.
 
 ## What the Gate does
 
