@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.26.0 · Portunia 0.63.0 · Mise à jour : 4 novembre 2026*
+*Portunia Gate 0.27.0 · Portunia 0.64.0 · Mise à jour : 4 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md).
 
@@ -357,7 +357,7 @@ Bureau à distance dans le navigateur : l'utilisateur tape ses identifiants Wind
 3.  **Publier l'adresse** : dans le tunnel, onglet **Routes › Add route › Published application**. **Subdomain** et **Domain** (le *Full hostname*, ex. `acces.votre-domaine.fr`, est l'adresse publique), **Path** vide, **Service URL** `http://localhost:8445`, puis **Add route**. Jamais de route `ssh://` ou `rdp://` vers vos serveurs : elle contournerait la Gate.
 4.  **Vérifier** : adresse publique `https://` + Full hostname, **Enregistrer**, puis **Tester l'adresse publique**.
 5.  **Conseillé** : une application **Cloudflare Access** sur cette adresse (compte de l'entreprise exigé avant même la page), et **Turnstile** (anti-robots).
-6.  **Dans Portunia** : Administrer › **Portail web** : groupe, durées, copier-coller, Turnstile, Enregistrer, puis l'interrupteur. En ligne de commande : `sudo portunia-gate portal set --url https://acces.votre-domaine.fr` (et `--group`, `--duration`, `--idle`, `--clipboard`), puis `sudo portunia-gate portal on`.
+6.  **Dans Portunia** : Administrer › **Portail web** : groupe, durées, copier-coller, Turnstile, Enregistrer, puis l'interrupteur. En ligne de commande : `sudo portunia-gate portal set --url https://acces.votre-domaine.fr` (et `--group`, `--duration`, `--idle`, `--clipboard`, `--code`), puis `sudo portunia-gate portal on`.
 7.  **Créer le groupe** (« Accès web » par défaut) et y ajouter les comptes concernés.
 
 ### L'écran Portail web
@@ -372,11 +372,12 @@ Bureau à distance dans le navigateur : l'utilisateur tape ses identifiants Wind
 | Durée d'une session web | 1, 4 ou 8 h (1 h par défaut ; de 1 à 12 h). |
 | Fermeture après inactivité | 15 min, 30 min ou 1 h (15 min par défaut ; de 5 à 240 min). Avertissement 90 s avant. |
 | Copier-coller | Autorise le copier-coller de texte dans le terminal web. |
+| Exiger le code d'authentification | Coché par défaut. Décoché : plus de code sur le portail pour les comptes qui suivent le réglage général. Un compte qui a ses propres combinaisons de connexion les suit : `password` le dispense du code même case cochée (exception), `password+totp` le lui impose même case décochée. En ligne de commande : `sudo portunia-gate portal set --code off` ; pour un seul compte : `sudo portunia-gate user policy marc password`. |
 | Turnstile | Clé du site et clé secrète (gardée chiffrée par la Gate ; laissez vide pour la garder). |
 
 ### Ce qui est toujours imposé
 
--   Mot de passe **et** code, même pour un compte qui s'en passe dans Portunia.
+-   Mot de passe, et code sauf exception (réglage ci-dessus ou combinaisons propres du compte). Sur Internet, un compte sans code n'est protégé que par son mot de passe : gardez Turnstile.
 -   Cinq essais par compte et vingt par adresse en dix minutes.
 -   Première connexion et code perdu : pas sur le portail, mais dans Portunia ou avec un administrateur.
 -   Session du navigateur revérifiée à chaque appel : un compte désactivé ou retiré du groupe est coupé tout de suite.
@@ -717,6 +718,7 @@ sudo portunia-gate hardening                                  # état du durciss
 # Portail web (voir §10)
 sudo portunia-gate portal set --url https://acces.acme.fr --group "Accès web" --duration 4 --idle 30 --clipboard on
 sudo portunia-gate portal set --turnstile-site 0x4AAA… --turnstile-secret   # clé secrète demandée (vide : l'efface)
+sudo portunia-gate portal set --code off                       # plus de code sur le portail (sauf comptes qui l'imposent)
 sudo portunia-gate portal on                                   # ouvre le portail ; off le ferme (sessions web fermées sous 30 s)
 sudo portunia-gate portal close-sessions                       # termine les sessions web sans fermer le portail
 sudo portunia-gate portal show                                 # état, réglages, exposition

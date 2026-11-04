@@ -29,7 +29,7 @@ sudo portunia-gate info                                  # version, SSH and API 
 sudo portunia-gate hardening                             # server hardening state and alerts
 ```
 
-`serve` runs the Gate; the `portunia-gate` service does it, do not start it by hand. Installing, updating and hardening the server go through `installer.sh` (see the [administration guide](guide-administration.md)).
+`serve` runs the Gate; the `portunia-gate` service does it, do not start it by hand. Installing, updating and hardening the server go through `installer.sh` (see the [administration guide](https://github.com/jpiperault/Portunia-Gate-releases/blob/main/docs/guide-administration.md)).
 
 ## Accounts
 
@@ -121,6 +121,8 @@ French names are accepted too: `nom`, `langue`, `banniere`, `duree_session_h`, `
 ```bash
 sudo portunia-gate portal show                            # state, settings, live state, exposure
 sudo portunia-gate portal set --url https://access.acme.com --group "Web access" --duration 4 --idle 30 --clipboard on
+sudo portunia-gate portal set --code off                  # no authenticator code, except accounts whose own combinations demand it
+sudo portunia-gate user policy marc password              # or: this account only signs in without a code
 sudo portunia-gate portal set --turnstile-site 0x4AAA… --turnstile-secret   # secret key asked (empty entry: erases it)
 sudo portunia-gate portal on                              # opens the portal
 sudo portunia-gate portal off                             # closes it; open web sessions close within 30 s
