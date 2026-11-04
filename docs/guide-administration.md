@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.27.0 · Portunia 0.64.0 · Mise à jour : 4 novembre 2026*
+*Portunia Gate 0.28.0 · Portunia 0.64.0 · Mise à jour : 5 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md).
 
@@ -275,6 +275,7 @@ Un secret **ne se relit jamais**, ni dans Portunia ni en ligne de commande. Si l
 -   En enregistré, l'authentification Windows (NLA) se fait entre le poste et le serveur : la Gate enregistre l'image, les clics, les copier-coller (masqués jusqu'à révélation) et la frappe si la règle le demande, sans voir le mot de passe.
 -   La Gate doit joindre le port 3389. Les serveurs RDP n'apparaissent pas dans le menu SSH de la Gate.
 -   À l'ouverture, l'utilisateur choisit la **qualité d'affichage**, dans Portunia comme dans le portail web : *Équilibrée* (par défaut), *Rapide* (sans fond d'écran, thèmes ni animations, pour les liaisons lentes) ou *Maximale* (tous les effets visuels). Ce choix ne change rien à l'enregistrement ni à sa relecture.
+-   **Copie de fichiers** (Gate 0.28) : permise seulement par une règle avec l'option **Fichiers** ; sinon la Gate la bloque, même avec un client qui la tenterait. Chaque fichier copié est noté au journal avec son empreinte SHA-256 ; `sudo portunia-gate setting file_copies_mb 200` garde en plus une copie des fichiers (jusqu'à 200 Mo par session) à côté de l'enregistrement. En mode rebond, la Gate ne voit pas le flux : bloquez alors la copie par une stratégie de groupe Windows.
 
 **En ligne de commande**, un serveur Windows se déclare avec `--protocol rdp` et **toujours** un `--mode` : sans lui, la commande prend le mode coffre, refusé en Bureau à distance. L'accès se donne ensuite comme pour SSH, par un groupe et une règle :
 
@@ -306,6 +307,7 @@ Administrer › **Règles** › **Nouvelle règle**. Principe : **tout ce qu'auc
 | De / À (heure) | De 0 à 23, à 1 à 24 ; vide = toute la journée. Une plage peut passer minuit (22 → 6). Fuseau de la Gate (`TZ`). |
 | Transferts de fichiers | SFTP, `scp`, `rsync` (serveurs en coffre). |
 | Tunnels | Redirection de ports `ssh -L` à travers le serveur (coffre). Les redirections distantes `-R` sont toujours refusées. |
+| Fichiers (Bureau à distance) | Copie de fichiers par le presse-papiers, dans les deux sens, sur les serveurs Windows en mode enregistré (Gate 0.28). **Sans cette option, la Gate la bloque** ; le texte copié passe toujours. Avec elle, chaque fichier est inscrit au journal (`fichier.copie` : sens, nom, taille, empreinte SHA-256) et apparaît dans l'enregistrement. En ligne de commande : `--files` ; la case arrive dans Portunia avec sa prochaine version. |
 | Enregistrer aussi la frappe | Sous-titres et recherche dans ce qui est tapé. **Capte aussi les mots de passe tapés** (masqués à la relecture, révélables par un administrateur). |
 | Expire le | Vide = jamais. Après la date, la règle passe « expirée ». |
 
@@ -318,6 +320,7 @@ La colonne État montre *active*, *hors plage* (en dehors des jours ou heures, e
 | Équipe Linux en heures ouvrées | Groupe « Admins Linux », serveurs de production, lun–ven, 7 h–20 h, SFTP.   `sudo portunia-gate rule add prod --group "Admins Linux" --targets web-01,db-01 --sftp --days lun-ven --hours 7-20` |
 | Astreinte de nuit | Groupe « Astreinte », mêmes serveurs, tous les jours, 20 h → 7 h (passe minuit). |
 | Prestataire pour une mission | Groupe « Prestataires », un serveur, frappe enregistrée, expiration à la fin du contrat.   `sudo portunia-gate rule add presta-db --group Prestataires --targets db-01 --record-input --expires 2026-12-31` |
+| Échanges de fichiers avec un serveur Windows | Groupe « Comptabilité », serveur Windows enregistré, copie de fichiers permise et tracée.   `sudo portunia-gate rule add compta-fichiers --group Comptabilité --targets srv-compta --files` |
 | Accès base de données depuis un poste | Groupe « DBA », serveur rebond SSH en coffre, **Tunnels** cochés : `ssh -L 5432:db-interne:5432`. |
 
 > [!NOTE]
@@ -349,6 +352,8 @@ En ligne de commande : `sudo portunia-gate setting auth_policy "password+totp,ke
 Pour ouvrir ses serveurs depuis un navigateur, sans Portunia : connexion, liste des serveurs autorisés, terminal SSH ou Bureau à distance dans un onglet. Pas d'administration. Mêmes règles, même coffre, même enregistrement, même journal ; une session web apparaît dans l'audit avec « (web) » après l'adresse.
 
 Bureau à distance dans le navigateur : l'utilisateur tape ses identifiants Windows et choisit la **qualité d'affichage** (Équilibrée, Rapide ou Maximale, retenue par le navigateur) ; la taille du bureau Windows suit celle de la fenêtre. Le client se charge une fois, puis reste en cache jusqu'à la version suivante de la Gate.
+
+**Fichiers** (Gate 0.28, règle avec l'option Fichiers, copier-coller du portail permis) : bouton **Envoyer des fichiers** ou fichiers déposés sur le bureau, puis collés dans Windows (Ctrl+V) ; dans l'autre sens, les fichiers copiés dans Windows (Ctrl+C) apparaissent dans un panneau, avec un bouton **Télécharger**. Chaque fichier est noté au journal avec son empreinte.
 
 ### Mise en place
 
@@ -694,6 +699,8 @@ sudo portunia-gate rule add windows --group "Admins Windows" --targets srv-ad-01
 sudo portunia-gate rule list                                   # avec leur état : active, hors plage, expirée
 sudo portunia-gate rule edit prod --sftp off --targets web-01,web-02   # interrupteurs : on ou off
 sudo portunia-gate rule edit presta-db --expires 2027-03-31 --hours ""   # "" efface jours, heures ou expiration
+sudo portunia-gate rule add compta-fichiers --group Comptabilité --targets srv-compta --files   # Bureau à distance : copie de fichiers permise et tracée
+sudo portunia-gate rule edit compta-fichiers --files off      # de nouveau bloquée
 sudo portunia-gate rule delete presta-db                       # les sessions qu'elle permettait se ferment sous 30 s
 
 # Réglages
@@ -706,6 +713,7 @@ sudo portunia-gate setting session_hours 8                   # durée d'une conn
 sudo portunia-gate setting remember_password off             # mémoriser le mot de passe de la Gate dans Portunia
 sudo portunia-gate setting own_replay on                     # chaque compte relit ses propres sessions
 sudo portunia-gate setting sensitive_commands "rm -rf,shutdown"   # repérées dans le lecteur
+sudo portunia-gate setting file_copies_mb 200                 # garde les fichiers copiés en Bureau à distance (Mo par session ; 0 : aucun)
 
 # Contrôle
 sudo portunia-gate audit --verify --last 50
@@ -713,6 +721,7 @@ sudo portunia-gate sessions --last 20
 sudo portunia-gate audit --search marc --last 500 --csv journal.csv   # recherche et export pour un tableur
 sudo portunia-gate sessions --user marc --server web-01 --since 2026-11-01 --text "rm -rf"
 sudo portunia-gate sessions show 3f2a9c1e                     # détail, fichier, contrôle de la signature
+sudo portunia-gate sessions --files                           # sessions Bureau à distance avec des fichiers copiés
 sudo portunia-gate hardening                                  # état du durcissement et alertes
 
 # Portail web (voir §10)
@@ -795,7 +804,7 @@ Fonctionne avec OpenSSH, PuTTY, MobaXterm, WinSCP. Le code TOTP doit avoir été
 | `/usr/lib/portunia-gate/portunia-gate` | Le programme. |
 | `/usr/bin/portunia-gate` | Commande d'administration (lance le programme avec l'environnement du service). |
 | `/etc/portunia-gate/portunia-gate.env` | Ports, fuseau, accès à la base, certificat, langue. |
-| `/var/lib/portunia-gate/` | Clés (`vault.key`, `signature.key`, `ssh_host_ed25519_key`), certificat (`api.crt`, `api.key`), `enregistrements/`, `assist/` (Portunia Assistance). |
+| `/var/lib/portunia-gate/` | Clés (`vault.key`, `signature.key`, `ssh_host_ed25519_key`), certificat (`api.crt`, `api.key`), `enregistrements/` (et, à côté d'une session Bureau à distance, `<session>-fichiers/` : copies des fichiers copiés, réglage `file_copies_mb`), `assist/` (Portunia Assistance). |
 | Base `portunia-gate` | Comptes, groupes, serveurs, règles, réglages, sessions, journal. |
 | Service | `portunia-gate.service` (systemd), compte `_portunia_gate`, relance automatique en cas d'échec. |
 
@@ -825,6 +834,7 @@ Après une modification : `sudo systemctl restart portunia-gate` (coupe les sess
 | Comptes | `compte.cree` `compte.modifie` `compte.supprime` `compte.desactive` `compte.reactive` `compte.mot_de_passe` `compte.mot_de_passe_provisoire` `compte.totp_enrole` `compte.totp_reinitialise` `compte.cle_ajoutee` |
 | Groupes, règles, réglages | `groupe.cree` `groupe.supprime` `groupe.membre_ajoute` `regle.creee` `regle.modifiee` `regle.supprimee` `reglage.modifie` |
 | Serveurs | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
+| Fichiers (Bureau à distance) | `fichier.copie` (sens, nom, taille, SHA-256, copie gardée) `fichier.bloque` (tentatives retenues faute d'autorisation) |
 | Sessions | `session.ouverte` `session.fermee` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` |
 | Portail | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
