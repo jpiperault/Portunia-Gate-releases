@@ -24,6 +24,7 @@ Les utilisateurs passent par la Gate pour atteindre les serveurs : la Gate véri
 
 ## Documentation
 
+- **[Référence de la ligne de commande](docs/ligne-de-commande.md)** : toutes les commandes `portunia-gate`, pour exploiter la Gate sans Portunia (Linux, macOS).
 - **[Guide d'administration](docs/guide-administration.md)** : installation, comptes, serveurs et coffre, règles, portail web, assistance, audit, sauvegardes, mises à jour, dépannage, ligne de commande.
 - **[Guide d'utilisation](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md)** : Portunia, connexion par une Gate, portail web, assistance.
 - Guide d'exploitation installé avec le paquet : `/usr/share/doc/portunia-gate/exploitation.fr.md`.
@@ -90,6 +91,8 @@ Dans Portunia : Administrer › **Portail web**, choisissez la façon de publier
 Détails dans le [guide d'administration](docs/guide-administration.md), chapitre 10.
 
 ## Se connecter sans Portunia
+
+Pour **administrer** la Gate sans Portunia, tout se fait sur le serveur avec `sudo portunia-gate …` : voir la [référence de la ligne de commande](docs/ligne-de-commande.md). Pour **se connecter** aux serveurs :
 
 ```bash
 ssh -p 2222 julien@gate              # menu des serveurs autorisés

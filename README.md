@@ -24,6 +24,7 @@ Users go through the Gate to reach servers: the Gate checks who they are, decide
 
 ## Documentation
 
+- **[Command-line reference](docs/command-line.md)**: every `portunia-gate` command, to run the Gate without Portunia (Linux, macOS).
 - **[Administration guide](docs/guide-administration.md)** (French): install, accounts, servers and vault, rules, web portal, assistance, audit, backups, updates, troubleshooting, command line.
 - **[User guide](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md)** (French): Portunia, connecting through a Gate, web portal, assistance.
 - Operations guide installed with the package: `/usr/share/doc/portunia-gate/operations.md`.
@@ -90,6 +91,8 @@ In Portunia: Administer › **Web portal**, choose how the portal is published, 
 Details in the [administration guide](docs/guide-administration.md), chapter 10.
 
 ## Connecting without Portunia
+
+To **administer** the Gate without Portunia, everything is done on the server with `sudo portunia-gate …`: see the [command-line reference](docs/command-line.md). To **connect** to servers:
 
 ```bash
 ssh -p 2222 julien@gate              # menu of allowed servers

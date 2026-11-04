@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.25.0 · Portunia 0.63.0 · Mise à jour : 4 novembre 2026*
+*Portunia Gate 0.26.0 · Portunia 0.63.0 · Mise à jour : 4 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md).
 
@@ -659,6 +659,9 @@ sudo portunia-gate user list
 sudo portunia-gate user passwd marc
 sudo portunia-gate user totp marc                             # (ré)enrôle le code
 sudo portunia-gate user disable marc                          # --undo pour réactiver
+sudo portunia-gate user policy presta "key+totp"              # combinaisons du compte ; "" = réglage général
+sudo portunia-gate user reset-password marc                   # nouveau mot de passe provisoire, affiché une fois
+sudo portunia-gate user reset-code marc                       # efface le code : nouvel enrôlement (Portunia ou user totp)
 sudo portunia-gate user delete marc
 
 # Groupes
@@ -697,10 +700,19 @@ sudo portunia-gate setting auth_policy "password+totp,key+totp"
 sudo portunia-gate setting banniere "Accès réservé. Les sessions sont enregistrées."
 sudo portunia-gate setting nom "Gate ACME"
 sudo portunia-gate setting langue fr                          # en, fr, ou "" pour la langue du système
+sudo portunia-gate setting                                   # tous les réglages et leur valeur
+sudo portunia-gate setting session_hours 8                   # durée d'une connexion Portunia (1 à 168 h)
+sudo portunia-gate setting remember_password off             # mémoriser le mot de passe de la Gate dans Portunia
+sudo portunia-gate setting own_replay on                     # chaque compte relit ses propres sessions
+sudo portunia-gate setting sensitive_commands "rm -rf,shutdown"   # repérées dans le lecteur
 
 # Contrôle
 sudo portunia-gate audit --verify --last 50
 sudo portunia-gate sessions --last 20
+sudo portunia-gate audit --search marc --last 500 --csv journal.csv   # recherche et export pour un tableur
+sudo portunia-gate sessions --user marc --server web-01 --since 2026-11-01 --text "rm -rf"
+sudo portunia-gate sessions show 3f2a9c1e                     # détail, fichier, contrôle de la signature
+sudo portunia-gate hardening                                  # état du durcissement et alertes
 
 # Portail web (voir §10)
 sudo portunia-gate portal set --url https://acces.acme.fr --group "Accès web" --duration 4 --idle 30 --clipboard on
@@ -708,6 +720,8 @@ sudo portunia-gate portal set --turnstile-site 0x4AAA… --turnstile-secret   # 
 sudo portunia-gate portal on                                   # ouvre le portail ; off le ferme (sessions web fermées sous 30 s)
 sudo portunia-gate portal close-sessions                       # termine les sessions web sans fermer le portail
 sudo portunia-gate portal show                                 # état, réglages, exposition
+sudo portunia-gate portal test                                 # la Gate répond-elle à l'adresse publique ?
+sudo portunia-gate portal acme --domains acces.acme.fr --email it@acme.fr --accept-terms   # Let's Encrypt ; --renew, --off, sans option : état
 sudo portunia-gate portal show                                 # mode, écoute HTTPS, certificat, tunnel
 sudo portunia-gate portal expose cloudflare                    # modes : cloudflare, internal, direct, proxy, relay
 sudo portunia-gate portal expose internal --networks 10.0.0.0/8,192.168.0.0/16
@@ -735,7 +749,7 @@ sudo systemctl restart portunia-gate-relais                    # après un chang
 
 Les modes acceptent aussi `vault`, `recorded`, `jump` ; les jours `mon-fri` ou `lun,mer,ven`. Options en anglais ou en français : `--temporary` ou `--provisoire`, `--name` ou `--nom` ; réglages `banner`/`banniere`, `name`/`nom`, `language`/`langue`. Sans valeur, `setting` affiche la valeur actuelle.
 
-Depuis Portunia Gate 0.25, tout se fait au choix dans Portunia ou en ligne de commande, et tout est inscrit au journal d'audit (acteur `console`). Restent dans Portunia : la **relecture des sessions** (et la révélation des saisies masquées), la recherche dans les sessions, l'export CSV du journal, **Let's Encrypt** et le test de l'adresse publique du portail. Une commande s'applique tout de suite en base ; ce qu'elle change pour les sessions ouvertes (fermeture, droits) prend effet sous 30 secondes.
+Depuis Portunia Gate 0.26, tout ce que fait Administrer dans Portunia se fait aussi en ligne de commande, et tout est inscrit au journal d'audit (acteur `console`) : une Gate s'exploite entièrement depuis un poste Linux ou macOS. Seule la **relecture des sessions** (lecteur, révélation des saisies masquées) reste dans Portunia. Une commande s'applique tout de suite en base ; ce qu'elle change pour les sessions ouvertes (fermeture, droits, langue) prend effet sous 30 secondes. Référence complète : [ligne de commande](ligne-de-commande.md) ([English](command-line.md)).
 
 En SSH, un compte au **mot de passe provisoire** est refusé tant que le mot de passe n'a pas été changé (dans Portunia, ou `user passwd`) ; son code doit aussi être enrôlé (Portunia, ou `user totp`).
 
