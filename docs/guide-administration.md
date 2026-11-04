@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.22.0 · Portunia 0.62.0 · Mise à jour : 2 novembre 2026*
+*Portunia Gate 0.24.0 · Portunia 0.63.0 · Mise à jour : 4 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md).
 
@@ -272,6 +272,19 @@ Un secret **ne se relit jamais**, ni dans Portunia ni en ligne de commande. Si l
 -   Modes **rebond** et **enregistré** ; l'utilisateur tape ses identifiants Windows à chaque ouverture, ni Portunia ni la Gate ne les gardent.
 -   En enregistré, l'authentification Windows (NLA) se fait entre le poste et le serveur : la Gate enregistre l'image, les clics, les copier-coller (masqués jusqu'à révélation) et la frappe si la règle le demande, sans voir le mot de passe.
 -   La Gate doit joindre le port 3389. Les serveurs RDP n'apparaissent pas dans le menu SSH de la Gate.
+-   À l'ouverture, l'utilisateur choisit la **qualité d'affichage**, dans Portunia comme dans le portail web : *Équilibrée* (par défaut), *Rapide* (sans fond d'écran, thèmes ni animations, pour les liaisons lentes) ou *Maximale* (tous les effets visuels). Ce choix ne change rien à l'enregistrement ni à sa relecture.
+
+**En ligne de commande**, un serveur Windows se déclare avec `--protocol rdp` et **toujours** un `--mode` : sans lui, la commande prend le mode coffre, refusé en Bureau à distance. L'accès se donne ensuite comme pour SSH, par un groupe et une règle :
+
+```
+sudo portunia-gate target add srv-compta --host 10.0.5.12 --protocol rdp --mode enregistre --account "ACME\compta" --folder Windows
+sudo portunia-gate group add Comptabilité
+sudo portunia-gate group member Comptabilité alice bob
+sudo portunia-gate rule add compta-rdp --group Comptabilité --targets srv-compta --days lun-ven --hours 7-20
+sudo portunia-gate target list        # protocole, mode, empreinte (« à mémoriser » avant la première connexion)
+```
+
+`--port` si le serveur n'écoute pas sur 3389 ; `--account` est facultatif (compte proposé à l'ouverture, jamais de mot de passe). Les options `--sftp`, `--tunnels` d'une règle ne concernent que SSH. Modifier, supprimer un serveur ou oublier son empreinte se fait dans Portunia (Administrer › Serveurs).
 
 ### Supprimer un serveur
 
@@ -332,6 +345,8 @@ En ligne de commande : `sudo portunia-gate setting auth_policy "password+totp,ke
 ## 10\. Portail web
 
 Pour ouvrir ses serveurs depuis un navigateur, sans Portunia : connexion, liste des serveurs autorisés, terminal SSH ou Bureau à distance dans un onglet. Pas d'administration. Mêmes règles, même coffre, même enregistrement, même journal ; une session web apparaît dans l'audit avec « (web) » après l'adresse.
+
+Bureau à distance dans le navigateur : l'utilisateur tape ses identifiants Windows et choisit la **qualité d'affichage** (Équilibrée, Rapide ou Maximale, retenue par le navigateur) ; la taille du bureau Windows suit celle de la fenêtre. Le client se charge une fois, puis reste en cache jusqu'à la version suivante de la Gate.
 
 ### Mise en place
 
@@ -647,12 +662,14 @@ sudo portunia-gate target add web-01 --host 10.0.1.11 --mode coffre --account ad
 sudo portunia-gate target add app-02 --host 10.0.1.12 --mode coffre --account deploy --key-file /root/deploy_ed25519
 sudo portunia-gate target add rec-app --host 10.0.2.5 --mode enregistre --folder Recette
 sudo portunia-gate target add fw-edge --host 10.0.0.1 --mode rebond --folder Réseau
-sudo portunia-gate target add srv-ad-01 --host 10.0.3.10 --protocol rdp --mode enregistre --folder Windows
+sudo portunia-gate target add srv-ad-01 --host 10.0.3.10 --protocol rdp --mode enregistre --folder Windows   # RDP : --mode obligatoire (enregistre ou rebond)
+sudo portunia-gate target add rds-02 --host 10.0.3.11 --port 3390 --protocol rdp --mode rebond --account "ACME\support"
 sudo portunia-gate target list
 
 # Règles
 sudo portunia-gate rule add prod --group "Admins Linux" --targets web-01,rec-app --sftp --tunnels --days lun-ven --hours 7-20
 sudo portunia-gate rule add presta-db --group Prestataires --targets db-01 --record-input --expires 2026-12-31
+sudo portunia-gate rule add windows --group "Admins Windows" --targets srv-ad-01,rds-02 --days lun-ven --hours 7-20
 
 # Réglages
 sudo portunia-gate setting auth_policy "password+totp,key+totp"
