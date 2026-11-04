@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.24.0 · Portunia 0.63.0 · Mise à jour : 4 novembre 2026*
+*Portunia Gate 0.25.0 · Portunia 0.63.0 · Mise à jour : 4 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md).
 
@@ -215,7 +215,7 @@ Un code ne sert qu'une fois : le même code à 6 chiffres est refusé s'il a dé
 
 ## 6\. Groupes
 
-Administrer › **Groupes** : créer, supprimer. Les **membres se choisissent dans la fiche de chaque compte** (Comptes › Modifier › Groupes), ou en ligne de commande : `sudo portunia-gate group member "Admins Linux" marc julien`.
+Administrer › **Groupes** : créer, supprimer. Les **membres se choisissent dans la fiche de chaque compte** (Comptes › Modifier › Groupes), ou en ligne de commande : `sudo portunia-gate group member "Admins Linux" marc julien` (`group remove` pour en retirer).
 
 Supprimer un groupe **supprime aussi ses règles**. Deux groupes ont un rôle particulier :
 
@@ -286,7 +286,7 @@ sudo portunia-gate rule add compta-rdp --group Comptabilité --targets srv-compt
 sudo portunia-gate target list        # protocole, mode, empreinte (« à mémoriser » avant la première connexion)
 ```
 
-`--port` si le serveur n'écoute pas sur 3389 ; `--account` est facultatif (compte proposé à l'ouverture, jamais de mot de passe). Les options `--sftp`, `--tunnels` d'une règle ne concernent que SSH. Modifier, supprimer un serveur ou oublier son empreinte se fait dans Portunia (Administrer › Serveurs).
+`--port` si le serveur n'écoute pas sur 3389 ; `--account` est facultatif (compte proposé à l'ouverture, jamais de mot de passe). Les options `--sftp`, `--tunnels` d'une règle ne concernent que SSH. Ensuite : `target edit` (adresse, mode, compte…), `target forget` après une réinstallation de Windows, `target delete` (Gate 0.25 et suivantes, voir Annexe A).
 
 ### Supprimer un serveur
 
@@ -357,7 +357,7 @@ Bureau à distance dans le navigateur : l'utilisateur tape ses identifiants Wind
 3.  **Publier l'adresse** : dans le tunnel, onglet **Routes › Add route › Published application**. **Subdomain** et **Domain** (le *Full hostname*, ex. `acces.votre-domaine.fr`, est l'adresse publique), **Path** vide, **Service URL** `http://localhost:8445`, puis **Add route**. Jamais de route `ssh://` ou `rdp://` vers vos serveurs : elle contournerait la Gate.
 4.  **Vérifier** : adresse publique `https://` + Full hostname, **Enregistrer**, puis **Tester l'adresse publique**.
 5.  **Conseillé** : une application **Cloudflare Access** sur cette adresse (compte de l'entreprise exigé avant même la page), et **Turnstile** (anti-robots).
-6.  **Dans Portunia** : Administrer › **Portail web** : groupe, durées, copier-coller, Turnstile, Enregistrer, puis l'interrupteur.
+6.  **Dans Portunia** : Administrer › **Portail web** : groupe, durées, copier-coller, Turnstile, Enregistrer, puis l'interrupteur. En ligne de commande : `sudo portunia-gate portal set --url https://acces.votre-domaine.fr` (et `--group`, `--duration`, `--idle`, `--clipboard`), puis `sudo portunia-gate portal on`.
 7.  **Créer le groupe** (« Accès web » par défaut) et y ajouter les comptes concernés.
 
 ### L'écran Portail web
@@ -401,7 +401,7 @@ Un dépanneur prend la main sur le PC d'un proche ou d'un client. La personne va
 
 1.  Avoir l'adresse publique du portail (§10, étapes 1 à 3). Le portail lui-même peut rester coupé.
 2.  Dans Portunia, activer l'extension **Assistance à distance** sur les postes des dépanneurs.
-3.  Administrer › **Assistance** : groupe des dépanneurs, durée maximale, **Enregistrer**, puis l'interrupteur.
+3.  Administrer › **Assistance** : groupe des dépanneurs, durée maximale, **Enregistrer**, puis l'interrupteur. Ou `sudo portunia-gate assist set --group Dépanneurs --duration 4` puis `sudo portunia-gate assist on`.
 4.  Créer le groupe (« Dépanneurs » par défaut) et y ajouter les comptes.
 5.  Vérifier que la case **Portunia Assistance** passe à *prêt* : la Gate télécharge le programme depuis les versions de Portunia (accès Internet sortant nécessaire), puis une fois par jour, et vérifie son empreinte SHA-256.
 
@@ -664,6 +664,9 @@ sudo portunia-gate user delete marc
 # Groupes
 sudo portunia-gate group add "Admins Linux"
 sudo portunia-gate group member "Admins Linux" marc julien
+sudo portunia-gate group remove "Admins Linux" marc               # ses sessions perdues se ferment sous 30 s
+sudo portunia-gate group list                                  # groupes et membres
+sudo portunia-gate group delete Stagiaires                     # supprime aussi ses règles
 
 # Serveurs
 sudo portunia-gate target add web-01 --host 10.0.1.11 --mode coffre --account admin --password --folder Production
@@ -673,11 +676,21 @@ sudo portunia-gate target add fw-edge --host 10.0.0.1 --mode rebond --folder Ré
 sudo portunia-gate target add srv-ad-01 --host 10.0.3.10 --protocol rdp --mode enregistre --folder Windows   # RDP : --mode obligatoire (enregistre ou rebond)
 sudo portunia-gate target add rds-02 --host 10.0.3.11 --port 3390 --protocol rdp --mode rebond --account "ACME\support"
 sudo portunia-gate target list
+sudo portunia-gate target edit web-01 --folder Prod --account root   # aussi --rename, --host, --port, --mode
+sudo portunia-gate target edit web-01 --host 10.0.1.21 --password      # nouvelle adresse : secret à redonner, empreinte oubliée
+sudo portunia-gate target secret web-01 --password             # remplace le secret du coffre (ou --key-file)
+sudo portunia-gate target secret app-02 --generate             # SSH : la Gate crée une clé, l'installe avec le mot de passe actuel, l'oublie
+sudo portunia-gate target forget srv-ad-01                     # serveur réinstallé : oublie l'empreinte
+sudo portunia-gate target delete fw-edge                       # secret effacé ; sessions et enregistrements gardés
 
 # Règles
 sudo portunia-gate rule add prod --group "Admins Linux" --targets web-01,rec-app --sftp --tunnels --days lun-ven --hours 7-20
 sudo portunia-gate rule add presta-db --group Prestataires --targets db-01 --record-input --expires 2026-12-31
 sudo portunia-gate rule add windows --group "Admins Windows" --targets srv-ad-01,rds-02 --days lun-ven --hours 7-20
+sudo portunia-gate rule list                                   # avec leur état : active, hors plage, expirée
+sudo portunia-gate rule edit prod --sftp off --targets web-01,web-02   # interrupteurs : on ou off
+sudo portunia-gate rule edit presta-db --expires 2027-03-31 --hours ""   # "" efface jours, heures ou expiration
+sudo portunia-gate rule delete presta-db                       # les sessions qu'elle permettait se ferment sous 30 s
 
 # Réglages
 sudo portunia-gate setting auth_policy "password+totp,key+totp"
@@ -689,7 +702,12 @@ sudo portunia-gate setting langue fr                          # en, fr, ou "" po
 sudo portunia-gate audit --verify --last 50
 sudo portunia-gate sessions --last 20
 
-# Portail web : exposition (voir §10)
+# Portail web (voir §10)
+sudo portunia-gate portal set --url https://acces.acme.fr --group "Accès web" --duration 4 --idle 30 --clipboard on
+sudo portunia-gate portal set --turnstile-site 0x4AAA… --turnstile-secret   # clé secrète demandée (vide : l'efface)
+sudo portunia-gate portal on                                   # ouvre le portail ; off le ferme (sessions web fermées sous 30 s)
+sudo portunia-gate portal close-sessions                       # termine les sessions web sans fermer le portail
+sudo portunia-gate portal show                                 # état, réglages, exposition
 sudo portunia-gate portal show                                 # mode, écoute HTTPS, certificat, tunnel
 sudo portunia-gate portal expose cloudflare                    # modes : cloudflare, internal, direct, proxy, relay
 sudo portunia-gate portal expose internal --networks 10.0.0.0/8,192.168.0.0/16
@@ -703,6 +721,10 @@ sudo portunia-gate portal relay-add dmz-01 10.0.5.20:8447      # relais dédié 
 sudo portunia-gate portal relay-list
 sudo portunia-gate portal relay-remove dmz-01
 
+# Assistance à distance (voir §11)
+sudo portunia-gate assist set --group Dépanneurs --duration 4  # groupe des dépanneurs, durée maximale (1 à 12 h)
+sudo portunia-gate assist on                                   # off la ferme (sessions arrêtées sous 30 s) ; show l'affiche
+
 # Relais dédié : sur la machine du relais (Debian amd64), pas sur la Gate
 sudo bash installer.sh relais CODE acces.acme.fr               # installe, appaire (edge enroll) et démarre le relais
 sudo runuser -u _portunia_gate -- /usr/lib/portunia-gate/portunia-gate edge certificate cert.pem cle.pem
@@ -713,7 +735,9 @@ sudo systemctl restart portunia-gate-relais                    # après un chang
 
 Les modes acceptent aussi `vault`, `recorded`, `jump` ; les jours `mon-fri` ou `lun,mer,ven`. Options en anglais ou en français : `--temporary` ou `--provisoire`, `--name` ou `--nom` ; réglages `banner`/`banniere`, `name`/`nom`, `language`/`langue`. Sans valeur, `setting` affiche la valeur actuelle.
 
-Ne se font que dans Portunia : la liste des règles, la modification et la suppression des serveurs et des règles, « Oublier l'empreinte », le retrait d'un membre d'un groupe, et les réglages de l'écran **Portail web** (interrupteur, adresse publique, groupe autorisé, durées, copier-coller, Turnstile, fermeture des sessions web).
+Depuis Portunia Gate 0.25, tout se fait au choix dans Portunia ou en ligne de commande, et tout est inscrit au journal d'audit (acteur `console`). Restent dans Portunia : la **relecture des sessions** (et la révélation des saisies masquées), la recherche dans les sessions, l'export CSV du journal, **Let's Encrypt** et le test de l'adresse publique du portail. Une commande s'applique tout de suite en base ; ce qu'elle change pour les sessions ouvertes (fermeture, droits) prend effet sous 30 secondes.
+
+En SSH, un compte au **mot de passe provisoire** est refusé tant que le mot de passe n'a pas été changé (dans Portunia, ou `user passwd`) ; son code doit aussi être enrôlé (Portunia, ou `user totp`).
 
 <a id="sans-portunia"></a>
 
