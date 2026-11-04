@@ -109,6 +109,8 @@ sudo PORTUNIA_GATE_ADMIN=julien PORTUNIA_GATE_NOM="Gate ACME" bash installer.sh 
 | `sudo bash installer.sh mise-a-jour` | Dernière version, redémarrage. **Coupe les sessions ouvertes.** |
 | `sudo bash installer.sh admin secours` | Crée un administrateur avec mot de passe provisoire (dernier administrateur bloqué, téléphone perdu). |
 | `sudo bash installer.sh portail` | Confie le tunnel Cloudflare à la Gate (commande ou jeton à coller), comme Administrer › Portail web. |
+| `sudo bash installer.sh durcir` | Durcit le serveur (voir [§17](#securite)) ; `durcir simulation`, `durcir etat`, `durcir annuler`. |
+| `sudo bash installer.sh relais CODE NOM` | Sur une **autre** machine : installe un relais dédié avec le code donné par la Gate (voir Annexe A). |
 
 En Docker, remplacez `sudo bash installer.sh` par `sudo ./installer.sh` dans le dossier du dépôt.
 
@@ -637,12 +639,18 @@ Pour signaler un problème : version (`sudo portunia-gate info`), les 100 derni�
 La commande `portunia-gate` s'utilise avec sudo, depuis n'importe quel dossier, en paquet comme en Docker. `sudo portunia-gate --help` et `sudo portunia-gate user --help` listent les options.
 
 ```
+# Installation et service
+sudo portunia-gate init --admin julien --temporary --name "Gate ACME"   # base, clés, administrateur ; relançable sans risque
+sudo portunia-gate init --no-admin                             # base et clés seulement
+# portunia-gate serve : lancé par le service portunia-gate (ne pas le lancer à la main)
+
 # Informations
-sudo portunia-gate info
+sudo portunia-gate info                                        # version, empreintes SSH et de l'API, nombre de comptes
 
 # Comptes
 sudo portunia-gate user add marc --provisoire                 # mot de passe provisoire, code enrôlé dans Portunia
 sudo portunia-gate user add marc                              # mot de passe et code saisis ici
+sudo portunia-gate user add sophie --role admin --temporary  # rôle : user (défaut), auditor ou admin
 sudo portunia-gate user add presta --policy "key+totp"        # clé SSH et code obligatoires
 sudo portunia-gate user add robot --no-password --policy key  # compte technique à clé seule
 sudo portunia-gate user key marc "ssh-ed25519 AAAA… marc@pc"  # ou le chemin d'un fichier .pub
@@ -680,9 +688,32 @@ sudo portunia-gate setting langue fr                          # en, fr, ou "" po
 # Contrôle
 sudo portunia-gate audit --verify --last 50
 sudo portunia-gate sessions --last 20
+
+# Portail web : exposition (voir §10)
+sudo portunia-gate portal show                                 # mode, écoute HTTPS, certificat, tunnel
+sudo portunia-gate portal expose cloudflare                    # modes : cloudflare, internal, direct, proxy, relay
+sudo portunia-gate portal expose internal --networks 10.0.0.0/8,192.168.0.0/16
+sudo portunia-gate portal expose proxy --trusted 10.0.5.10,10.0.5.11 --header X-Forwarded-For
+sudo portunia-gate portal https 8446                           # écoute HTTPS ; sans valeur, l'affiche ; --off la ferme
+sudo portunia-gate portal cert                                 # affiche le certificat du portail
+sudo portunia-gate portal cert --import portail.pfx            # ou --import cert.pem --key cle.pem ; --remove : auto-signé
+sudo portunia-gate portal tunnel "eyJh…"                       # jeton Cloudflare (« - » : lu sur l'entrée standard) ; --remove
+sudo portunia-gate portal tunnel                               # état du tunnel
+sudo portunia-gate portal relay-add dmz-01 10.0.5.20:8447      # relais dédié : affiche son code d'appairage
+sudo portunia-gate portal relay-list
+sudo portunia-gate portal relay-remove dmz-01
+
+# Relais dédié : sur la machine du relais (Debian amd64), pas sur la Gate
+sudo bash installer.sh relais CODE acces.acme.fr               # installe, appaire (edge enroll) et démarre le relais
+sudo runuser -u _portunia_gate -- /usr/lib/portunia-gate/portunia-gate edge certificate cert.pem cle.pem
+sudo systemctl restart portunia-gate-relais                    # après un changement de certificat
+# edge enroll CODE [--name NOM] [--public 0.0.0.0:443] [--tunnel 0.0.0.0:8447] [--cert C --key K] : fait par l'installateur
+# edge serve : lancé par le service portunia-gate-relais
 ```
 
-La liste, la modification et la suppression des règles et des serveurs se font dans Portunia (Administrer). Les modes acceptent aussi `vault`, `recorded`, `jump` ; les jours `mon-fri` ou `lun,mer,ven`.
+Les modes acceptent aussi `vault`, `recorded`, `jump` ; les jours `mon-fri` ou `lun,mer,ven`. Options en anglais ou en français : `--temporary` ou `--provisoire`, `--name` ou `--nom` ; réglages `banner`/`banniere`, `name`/`nom`, `language`/`langue`. Sans valeur, `setting` affiche la valeur actuelle.
+
+Ne se font que dans Portunia : la liste des règles, la modification et la suppression des serveurs et des règles, « Oublier l'empreinte », le retrait d'un membre d'un groupe, et les réglages de l'écran **Portail web** (interrupteur, adresse publique, groupe autorisé, durées, copier-coller, Turnstile, fermeture des sessions web).
 
 <a id="sans-portunia"></a>
 
