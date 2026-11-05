@@ -13,10 +13,11 @@ Les utilisateurs passent par la Gate pour atteindre les serveurs : la Gate véri
 |---|---|
 | **Trois modes par serveur** | **Rebond** : relais de bout en bout ; la Gate trace la connexion sans en voir le contenu. **Enregistré** : la Gate relaie et enregistre la session ; l'utilisateur tape ses propres identifiants. **Coffre** : comme Enregistré, et la Gate fournit le compte du serveur, que l'utilisateur ne connaît jamais. |
 | **Double authentification** | Mot de passe, clé SSH et code TOTP (Google Authenticator, Microsoft Authenticator…), combinables. Un code ne sert qu'une fois. |
-| **Droits** | Des règles relient un groupe à des serveurs, avec jours, heures, date d'expiration, SFTP et tunnels permis ou non. Tout ce qui n'est pas permis est refusé. |
+| **Droits** | Des règles relient un groupe à des serveurs, avec jours, heures, date d'expiration, SFTP, tunnels et copie de fichiers en Bureau à distance permis ou non. Tout ce qui n'est pas permis est refusé. |
 | **Enregistrement et relecture** | Chaque session en mode Coffre ou Enregistré est enregistrée et signée. Dans Portunia, relisez-la comme une vidéo : frappes en sous-titres, temps morts sautés, commandes sensibles signalées, recherche dans toutes les sessions. Les mots de passe tapés sont masqués ; chaque relecture est tracée. |
 | **Journal d'audit** | Chaque événement contient l'empreinte du précédent : une ligne supprimée ou modifiée se voit. |
-| **Bureau à distance** | Serveurs Windows (RDP) derrière la Gate, depuis Portunia ou le navigateur. |
+| **Bureau à distance** | Serveurs Windows (RDP) derrière la Gate, depuis Portunia ou le navigateur. La copie de fichiers est bloquée sauf si la règle la permet ; chaque fichier copié est noté avec son empreinte SHA-256. |
+| **Interfaces web** | Consoles d'administration (vCenter, iDRAC, pare-feu…) ouvertes par la Gate, depuis Portunia ou le portail, avec chaque page ouverte notée. |
 | **Portail web** | Pour qui n'a pas Portunia sous la main : connexion, terminal et Bureau à distance dans le navigateur. Publié par un tunnel Cloudflare lancé par la Gate, un relais dédié en DMZ, un proxy ou WAF, ou directement en HTTPS, avec le certificat de votre PKI ou Let's Encrypt. Tout se règle dans Portunia. |
 | **Assistance à distance** | Dépanner quelqu'un sur son PC Windows : il lance un petit programme, vous lit un code et choisit voir seulement ou voir et contrôler. Chiffré de bout en bout, relayé par la Gate. |
 | **Portunia** | La Gate apparaît dans la barre latérale de Portunia ; ses serveurs s'ouvrent d'un clic ; administrateurs et auditeurs gèrent tout depuis Portunia Équipes. |
@@ -26,7 +27,7 @@ Les utilisateurs passent par la Gate pour atteindre les serveurs : la Gate véri
 
 - **[Référence de la ligne de commande](docs/ligne-de-commande.md)** : toutes les commandes `portunia-gate`, pour exploiter la Gate sans Portunia (Linux, macOS).
 - **[Guide d'administration](docs/guide-administration.md)** (aussi [en anglais](docs/administration-guide.md)) : installation, comptes, serveurs et coffre, règles, portail web, assistance, audit, sauvegardes, mises à jour, dépannage, ligne de commande.
-- **[Guide d'utilisation](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md)** : Portunia, connexion par une Gate, portail web, assistance.
+- **[Guide d'utilisation](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md)** (aussi [en anglais](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md)) : Portunia, connexion par une Gate, portail web, assistance.
 - Guide d'exploitation installé avec le paquet : `/usr/share/doc/portunia-gate/exploitation.fr.md`.
 
 ## Installer

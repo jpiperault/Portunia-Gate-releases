@@ -2,7 +2,7 @@
 
 *Portunia Gate 0.30.0 · Portunia 0.69.0 · Updated: 5 November 2026*
 
-> The Portunia user guide (in French) is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). Version française : [guide d'administration](guide-administration.md).
+> The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
 Install, configure and run the Gate, and prepare Portunia on workstations: accounts, servers, rules, web portal, assistance, audit, backups, updates and troubleshooting. Each screen is described with its fields, default values and the equivalent commands on the server.
 
