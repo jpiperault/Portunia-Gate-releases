@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.30.0 · Portunia 0.69.0 · Mise à jour : 5 novembre 2026*
+*Portunia Gate 0.30.1 · Portunia 0.70.1 · Mise à jour : 5 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -587,7 +587,7 @@ Le portail web charge de lui-même ses nouvelles pages après une mise à jour. 
 
 ### Durcir le serveur
 
-Sur un serveur dédié à la Gate, l'assistant peut ne garder que le nécessaire : pare-feu fermé sauf les ports utiles, services inutiles arrêtés, SSH du système et noyau resserrés, mises à jour de sécurité automatiques. Facultatif : `--durcir` à l'installation, ou `sudo bash installer.sh durcir` ensuite. `durcir simulation` montre le plan sans rien changer, et `durcir annuler` retire le durcissement, sauf les paquets supprimés. Sans confirmation d'une nouvelle connexion SSH sous 5 minutes, le pare-feu et le SSH du système reviennent à leur état d'avant.
+Sur un serveur dédié à la Gate, l'assistant peut ne garder que le nécessaire : pare-feu fermé sauf les ports utiles, services inutiles arrêtés, SSH du système et noyau resserrés, mises à jour de sécurité automatiques. Facultatif : `--durcir` à l'installation, ou `sudo bash installer.sh durcir` ensuite. `durcir simulation` montre le plan sans rien changer, `durcir etat` montre l'état actuel, et `durcir annuler` retire le durcissement, sauf les paquets supprimés. Sans confirmation d'une nouvelle connexion SSH sous 5 minutes, le pare-feu et le SSH du système reviennent à leur état d'avant.
 
 L'onglet **Administrer › Durcissement** de Portunia affiche l'état relevé sur le serveur toutes les 15 minutes et signale un pare-feu arrêté, un service relancé ou un relevé trop ancien. Il ne modifie rien : le durcissement se pilote sur le serveur, en root. C'est un tableau de bord, pas une preuve si le serveur est compromis.
 

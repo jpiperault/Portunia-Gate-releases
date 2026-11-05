@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.30.0 · Portunia 0.69.0 · Updated: 5 November 2026*
+*Portunia Gate 0.30.1 · Portunia 0.70.1 · Updated: 5 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -65,7 +65,7 @@ sudo bash installer.sh
 
 The assistant downloads the latest version, **checks its SHA-256 fingerprint**, installs the package and PostgreSQL, creates the `portunia-gate` database (local socket access, no password, owned by `_portunia_gate`) and the `portunia-gate` service. The service runs under the `_portunia_gate` system account and only writes to `/var/lib/portunia-gate`.
 
-Without Internet access, or for a specific version: copy the `.deb` to the server, then `sudo bash installer.sh --paquet portunia-gate_0.11.0_amd64.deb`.
+Without Internet access, or for a specific version: copy the `.deb` to the server, then `sudo bash installer.sh --package portunia-gate_0.11.0_amd64.deb`.
 
 ### Docker
 
@@ -94,10 +94,10 @@ The assistant then creates the keys, the certificate, the database and the admin
 
 ### Unattended installation
 
-Outside a terminal (automation tool), the assistant takes the suggested values or those of the variables `PORTUNIA_GATE_NOM`, `PORTUNIA_GATE_ADMIN`, `PORTUNIA_GATE_SSH_PORT`, `PORTUNIA_GATE_API_PORT`, `TZ`:
+Outside a terminal (automation tool), the assistant takes the suggested values or those of the variables `PORTUNIA_GATE_NAME`, `PORTUNIA_GATE_ADMIN`, `PORTUNIA_GATE_SSH_PORT`, `PORTUNIA_GATE_API_PORT`, `TZ`:
 
 ```
-sudo PORTUNIA_GATE_ADMIN=julien PORTUNIA_GATE_NOM="ACME Gate" bash installer.sh </dev/null
+sudo PORTUNIA_GATE_ADMIN=julien PORTUNIA_GATE_NAME="ACME Gate" bash installer.sh </dev/null
 ```
 
 ### Running the assistant again
@@ -106,11 +106,11 @@ sudo PORTUNIA_GATE_ADMIN=julien PORTUNIA_GATE_NOM="ACME Gate" bash installer.sh 
 | --- | --- |
 | `sudo bash installer.sh` | On an installed Gate: menu of the choices below. |
 | `sudo bash installer.sh info` | Address, ports and fingerprint to give to users. |
-| `sudo bash installer.sh mise-a-jour` | Latest version, restart. **Cuts open sessions.** |
-| `sudo bash installer.sh admin secours` | Creates an administrator with a temporary password (last administrator locked out, lost phone). |
-| `sudo bash installer.sh portail` | Hands the Cloudflare tunnel to the Gate (command or token to paste), like Administer › Web portal. |
-| `sudo bash installer.sh durcir` | Hardens the server (see [§17](#securite)); `durcir simulation`, `durcir etat`, `durcir annuler`. |
-| `sudo bash installer.sh relais CODE NAME` | On **another** machine: installs a dedicated relay with the code given by the Gate (see Appendix A). |
+| `sudo bash installer.sh update` | Latest version, restart. **Cuts open sessions.** |
+| `sudo bash installer.sh admin rescue` | Creates an administrator with a temporary password (last administrator locked out, lost phone). |
+| `sudo bash installer.sh portal` | Hands the Cloudflare tunnel to the Gate (command or token to paste), like Administer › Web portal. |
+| `sudo bash installer.sh harden` | Hardens the server (see [§17](#securite)); `harden plan`, `harden status`, `harden undo`. |
+| `sudo bash installer.sh relay CODE NAME` | On **another** machine: installs a dedicated relay with the code given by the Gate (see Appendix A). |
 
 With Docker, replace `sudo bash installer.sh` with `sudo ./installer.sh` in the repository folder.
 
@@ -378,7 +378,7 @@ Web interfaces (Gate 0.30): the server's button, then the application in a new t
 ### Setting up
 
 1.  **Create the tunnel** in Cloudflare: **Networking › Tunnels › Create Tunnel**, a name (e.g. `portunia-gate`), then copy the installation command shown, for any system. It contains the token; do not run it.
-2.  **Give it to the Gate**: Administer › **Web portal** › **Cloudflare** mode, paste the command, **Save the token**. The Gate downloads and starts `cloudflared` itself; the tunnel becomes **Healthy** in Cloudflare. Without Portunia: `sudo bash installer.sh portail`.
+2.  **Give it to the Gate**: Administer › **Web portal** › **Cloudflare** mode, paste the command, **Save the token**. The Gate downloads and starts `cloudflared` itself; the tunnel becomes **Healthy** in Cloudflare. Without Portunia: `sudo bash installer.sh portal`.
 3.  **Publish the address**: in the tunnel, **Routes › Add route › Published application** tab. **Subdomain** and **Domain** (the *Full hostname*, e.g. `access.your-domain.com`, is the public address), **Path** empty, **Service URL** `http://localhost:8445`, then **Add route**. Never add an `ssh://` or `rdp://` route to your servers: it would bypass the Gate.
 4.  **Check**: public address `https://` + Full hostname, **Save**, then **Test the public address**.
 5.  **Recommended**: a **Cloudflare Access** application on this address (company account required before the page even shows), and **Turnstile** (anti-bot).
@@ -534,7 +534,7 @@ sudo docker cp "$(sudo docker compose ps -q portunia-gate)":/var/lib/portunia-ga
 
 Recommended procedure, to rehearse first on a test machine:
 
-1.  On a new server, install **the same version** of Portunia Gate (`sudo bash installer.sh --paquet portunia_gate_X.Y.Z_amd64.deb`), then stop the service: `sudo systemctl stop portunia-gate`.
+1.  On a new server, install **the same version** of Portunia Gate (`sudo bash installer.sh --package portunia_gate_X.Y.Z_amd64.deb`), then stop the service: `sudo systemctl stop portunia-gate`.
 2.  Put the data and settings back. The archive stores `/var/lib/portunia-gate` and `/etc/portunia-gate` in a single `portunia-gate/` folder: extract it aside, then put each file back:
     
     ```
@@ -554,8 +554,8 @@ Recommended procedure, to rehearse first on a test machine:
 ## 15\. Update
 
 ```
-sudo bash installer.sh mise-a-jour       # Debian package
-sudo ./installer.sh mise-a-jour          # Docker, from the repository folder
+sudo bash installer.sh update       # Debian package
+sudo ./installer.sh update          # Docker, from the repository folder
 ```
 
 1.  Read the release notes (Portunia-Gate-releases) and check that no minimum Portunia version is required.
@@ -587,7 +587,7 @@ The web portal loads its new pages by itself after an update. If Portunia says t
 
 ### Harden the server
 
-On a server dedicated to the Gate, the assistant can keep only what is needed: firewall closed except for the useful ports, needless services stopped, system SSH and kernel tightened, automatic security updates. Optional: `--durcir` at installation, or `sudo bash installer.sh durcir` afterwards. `durcir simulation` shows the plan without changing anything, and `durcir annuler` removes the hardening, except for removed packages. Without confirmation of a new SSH connection within 5 minutes, the firewall and the system SSH return to their previous state.
+On a server dedicated to the Gate, the assistant can keep only what is needed: firewall closed except for the useful ports, needless services stopped, system SSH and kernel tightened, automatic security updates. Optional: `--harden` at installation, or `sudo bash installer.sh harden` afterwards. `harden plan` shows the plan without changing anything, `harden status` shows the current state, and `harden undo` removes the hardening, except for removed packages. Without confirmation of a new SSH connection within 5 minutes, the firewall and the system SSH return to their previous state.
 
 Portunia's **Administer › Hardening** tab shows the state read on the server every 15 minutes and flags a stopped firewall, a restarted service or a reading that is too old. It changes nothing: hardening is driven on the server, as root. It is a dashboard, not proof if the server is compromised.
 
@@ -622,7 +622,7 @@ A session closes in less than 30 seconds if the account is disabled, or if the r
 | "Docker does not start" in an LXC container | Enable *nesting* and *keyctl* (Proxmox › Options › Features), restart the container, run the assistant again. |
 | Build stopped (`killed`, `signal 9`, `out of memory`) | Not enough memory (4 GB recommended): add memory or swap, run again; the installation resumes. |
 | "Port 2222 is already in use" | Choose another port when asked. |
-| "Download impossible" | No access to github.com: copy the `.deb` from a workstation, then `--paquet`. |
+| "Download impossible" | No access to github.com: copy the `.deb` from a workstation, then `--package`. |
 | "The downloaded package is altered" | Corrupted or intercepted download: run again; if it persists, do not install and report it. |
 | The service does not start (package) | `sudo journalctl -u portunia-gate -n 50`. Unprivileged LXC container: enable *nesting*. |
 | `git clone` refuses the password | GitHub asks for an access token instead. |
@@ -638,7 +638,7 @@ A session closes in less than 30 seconds if the account is disabled, or if the r
 | Correct code but refused | Clock drift (NTP on the server and the phone) or code already used: wait for the next one. |
 | "Too many attempts" | 5 failures in 10 minutes: wait a few minutes. |
 | Lost phone | Accounts › Reset the code, or `sudo portunia-gate user totp <account>`. |
-| No administrator left | `sudo bash installer.sh admin secours` on the server. |
+| No administrator left | `sudo bash installer.sh admin rescue` on the server. |
 | "Gate session expired" | Sign in again from the Gates section. |
 | Empty server list | No active rule for one's groups (see §8). Hours follow the Gate's time zone. |
 | "The vault account was refused" | Secret changed on the server: replace the secret. |
@@ -774,7 +774,7 @@ sudo portunia-gate assist set --group Dépanneurs --duration 4  # helpers' group
 sudo portunia-gate assist on                                   # off closes it (sessions stopped within 30 s); show shows it
 
 # Dedicated relay: on the relay machine (Debian amd64), not on the Gate
-sudo bash installer.sh relais CODE access.acme.com             # installs, pairs (edge enroll) and starts the relay
+sudo bash installer.sh relay CODE access.acme.com             # installs, pairs (edge enroll) and starts the relay
 sudo runuser -u _portunia_gate -- /usr/lib/portunia-gate/portunia-gate edge certificate cert.pem key.pem
 sudo systemctl restart portunia-gate-relais                    # after a certificate change
 # edge enroll CODE [--name NAME] [--public 0.0.0.0:443] [--tunnel 0.0.0.0:8447] [--cert C --key K]: done by the installer

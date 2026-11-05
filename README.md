@@ -67,7 +67,7 @@ The vault key encrypts server passwords and TOTP secrets: without it, a restore 
 | `sudo bash installer.sh relay CODE` | Makes this machine a dedicated web portal relay (code given by the Gate) |
 | `sudo bash installer.sh --package portunia-gate_X.Y.Z_amd64.deb` | Installs a package downloaded beforehand (server without Internet) |
 
-Without a terminal (automation), the wizard uses the suggested values or those of the `PORTUNIA_GATE_NOM`, `PORTUNIA_GATE_ADMIN`, `PORTUNIA_GATE_SSH_PORT`, `PORTUNIA_GATE_API_PORT` and `TZ` variables.
+Without a terminal (automation), the wizard uses the suggested values or those of the `PORTUNIA_GATE_NAME`, `PORTUNIA_GATE_ADMIN`, `PORTUNIA_GATE_SSH_PORT`, `PORTUNIA_GATE_API_PORT` and `TZ` variables.
 
 The wizard, the Gate and the web portal speak English, or French when the system or the browser is in French.
 
