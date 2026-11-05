@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.31.0 · Portunia 0.71.0 · Mise à jour : 5 novembre 2026*
+*Portunia Gate 0.32.0 · Portunia 0.72.0 · Mise à jour : 5 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -243,7 +243,8 @@ Administrer › **Serveurs et coffre** › **Ajouter un serveur**. Chaque modifi
 | Adresse, Port | Telles que la Gate les joint (adresse interne). Changer l'adresse d'un serveur qui a un secret dans le coffre oblige à **ressaisir le secret** : un jeton d'administration volé ne suffit pas à l'envoyer vers une autre machine. Le journal note l'ancienne et la nouvelle adresse. Les adresses de métadonnées des hébergeurs cloud (`169.254.169.254`…) sont refusées. |
 | Mode | Rebond, enregistré ou coffre (ci-dessous). |
 | Compte sur le serveur | Obligatoire en coffre. En Bureau à distance : `DOMAINE\compte`, proposé à l'ouverture. |
-| Secret du coffre | En coffre seulement : *Générer une clé et l'installer*, *Mot de passe du compte*, *Clé privée existante* (sans phrase de passe) ; en Bureau à distance, le mot de passe du compte seulement. En modification : *Garder le secret actuel*. |
+| Secret du coffre | En coffre seulement : *Générer une clé et l'installer*, *Mot de passe du compte*, *Clé privée existante* (sans phrase de passe) ; en Bureau à distance et en interface web, le mot de passe du compte seulement. En modification : *Garder le secret actuel*. |
+| Connexion | Interface web en mode coffre (Gate 0.32) : remplir le formulaire et le valider, remplir seulement, ou authentification HTTP (voir [plus bas](#web)). |
 
 <a id="modes"></a>
 
@@ -312,9 +313,10 @@ sudo portunia-gate rdp show
 
 <a id="web"></a>
 
-### Interfaces web (Gate 0.30)
+### Interfaces web (Gate 0.30, coffre 0.32)
 
--   Pour les consoles d'administration : vCenter, iDRAC, iLO, pare-feu, NAS… Protocole **Interface web (HTTPS)** ou **(HTTP)**, adresse et port du serveur ; mode **enregistré** seulement. Les identifiants de l'application se tapent dans sa page, comme d'habitude.
+-   Pour les consoles d'administration (vCenter, iDRAC, iLO, pare-feu, NAS…) et les applications internes. Protocole **Interface web (HTTPS)** ou **(HTTP)**, adresse et port du serveur ; mode **enregistré** ou **coffre** (pas de rebond : la Gate lit chaque requête). Enregistré : les identifiants de l'application se tapent dans sa page, comme d'habitude.
+-   **Coffre** (Gate 0.32) : la Gate connecte l'utilisateur avec le compte du coffre (**Compte sur le serveur** et son mot de passe). Le mot de passe **n'arrive jamais dans le navigateur** : la Gate remplit le formulaire de connexion avec le compte et, dans le champ mot de passe, un jeton à usage unique (10 minutes, pour ce compte et ce serveur seulement) ; quand le navigateur envoie la connexion, quel qu'en soit le format (formulaire, JSON, en-tête HTTP), la Gate remplace le jeton par le mot de passe. **Connexion** : *Remplir le formulaire de connexion et le valider* (par défaut ; aussi pour les applications qui se connectent en JavaScript, et authentification HTTP si le serveur la demande), *Remplir le formulaire seulement* (l'utilisateur clique), ou *Authentification HTTP (Basic)* à chaque requête (équipements qui affichent la fenêtre de connexion du navigateur). Chaque usage du mot de passe est noté au journal (`web.coffre` : serveur, chemin, compte). Limites : une application qui chiffre le mot de passe dans le navigateur, ou demande un second facteur ou un captcha, ne se connecte pas toute seule ; un utilisateur capable de manipuler la page pourrait réutiliser son jeton dans une autre requête dans les 10 minutes, ce que `web.coffre` montre.
 -   La Gate relaie chaque requête : la règle est revérifiée au plus toutes les 30 secondes, chaque **page ouverte** est notée au journal (`web.page` : serveur, chemin), l'ouverture aussi (`web.ouvert`). Les images, scripts et appels de l'application ne sont pas notés. Ni l'image ni la frappe ne sont enregistrées.
 -   Le certificat d'un serveur HTTPS est vérifié par son empreinte, gardée à la première connexion, comme pour le Bureau à distance.
 -   **Depuis Portunia** : le serveur s'ouvre dans une fenêtre dédiée, à travers un relais local vers la Gate ; la session web dure 8 heures.
@@ -324,6 +326,8 @@ sudo portunia-gate rdp show
 ```
 sudo portunia-gate target add vcenter --host 10.0.4.10 --protocol https --folder Infrastructure
 sudo portunia-gate rule add vsphere --group "Admins VMware" --targets vcenter --days lun-ven --hours 7-20
+sudo portunia-gate target add mail --host 192.168.1.16 --protocol https --mode coffre --account admin --password   # coffre : la Gate connecte
+sudo portunia-gate target edit mail --web-login remplir                                                             # auto, remplir ou basic
 ```
 
 ### Supprimer un serveur
@@ -881,7 +885,7 @@ Après une modification : `sudo systemctl restart portunia-gate` (coupe les sess
 | Groupes, règles, réglages | `groupe.cree` `groupe.supprime` `groupe.membre_ajoute` `regle.creee` `regle.modifiee` `regle.supprimee` `reglage.modifie` |
 | Serveurs | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
 | Fichiers (Bureau à distance) | `fichier.copie` (sens, nom, taille, SHA-256, copie gardée) `fichier.bloque` (tentatives retenues faute d'autorisation) |
-| Sessions | `session.ouverte` `session.fermee` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` |
+| Sessions | `session.ouverte` `session.fermee` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` |
 | Portail | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
 | Assistance | `assistance.ouverte` `assistance.fermee` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |

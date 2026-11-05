@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.31.0 · Portunia 0.71.0 · Updated: 5 November 2026*
+*Portunia Gate 0.32.0 · Portunia 0.72.0 · Updated: 5 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -243,7 +243,8 @@ Administer › **Servers and vault** › **Add a server**. Every change is logge
 | Address, Port | As the Gate reaches them (internal address). Changing the address of a server that has a secret in the vault requires **typing the secret again**: a stolen administration token is not enough to send it to another machine. The log records the old and new address. Cloud providers' metadata addresses (`169.254.169.254`…) are refused. |
 | Mode | Jump, recorded or vault (below). |
 | Account on the server | Required in vault mode. For Remote Desktop: `DOMAIN\account`, offered at opening. |
-| Vault secret | Vault mode only: *Generate a key and install it*, *Account password*, *Existing private key* (without passphrase); for Remote Desktop, the account password only. When editing: *Keep the current secret*. |
+| Vault secret | Vault mode only: *Generate a key and install it*, *Account password*, *Existing private key* (without passphrase); for Remote Desktop and web interfaces, the account password only. When editing: *Keep the current secret*. |
+| Sign-in | Web interface in vault mode (Gate 0.32): fill in the form and submit it, fill in only, or HTTP authentication (see [below](#web)). |
 
 <a id="modes"></a>
 
@@ -312,9 +313,10 @@ sudo portunia-gate rdp show
 
 <a id="web"></a>
 
-### Web interfaces (Gate 0.30)
+### Web interfaces (Gate 0.30, vault 0.32)
 
--   For administration consoles: vCenter, iDRAC, iLO, firewalls, NAS… Protocol **Web interface (HTTPS)** or **(HTTP)**, the server's address and port; recorded mode only. The application's credentials are typed in its page, as usual.
+-   For administration consoles (vCenter, iDRAC, iLO, firewalls, NAS…) and internal applications. Protocol **Web interface (HTTPS)** or **(HTTP)**, the server's address and port; **recorded** or **vault** mode (no jump: the Gate reads every request). Recorded: the application's credentials are typed in its page, as usual.
+-   **Vault** (Gate 0.32): the Gate signs the user in with the vault account (**Account on the server** and its password). The password **never reaches the browser**: the Gate fills the sign-in form with the account and, in the password field, a one-time token (10 minutes, this account and this server only); when the browser sends the sign-in, whatever its format (form, JSON, HTTP header), the Gate swaps the token for the password. **Sign-in**: *Fill in the sign-in form and submit it* (default; also for applications that sign in with JavaScript, and HTTP authentication when the server asks for it), *Fill in the form only* (the user clicks), or *HTTP authentication (Basic)* on every request (equipment that shows the browser's sign-in window). Each use of the password is logged (`web.coffre`: server, path, account). Limits: an application that hashes the password in the browser, or asks for a second factor or a captcha, does not sign in by itself; a user able to manipulate the page could reuse their token in another request within 10 minutes, which `web.coffre` shows.
 -   The Gate relays every request: the rule is checked again at most every 30 seconds, each **page opened** is logged (`web.page`: server, path), and so is the opening (`web.ouvert`). The application's images, scripts and calls are not logged. Neither the image nor the keystrokes are recorded.
 -   The certificate of an HTTPS server is checked by its fingerprint, kept on the first connection, as for Remote Desktop.
 -   **From Portunia**: the server opens in a dedicated window, through a local relay to the Gate; the web session lasts 8 hours.
@@ -324,6 +326,8 @@ sudo portunia-gate rdp show
 ```
 sudo portunia-gate target add vcenter --host 10.0.4.10 --protocol https --folder Infrastructure
 sudo portunia-gate rule add vsphere --group "VMware admins" --targets vcenter --days mon-fri --hours 7-20
+sudo portunia-gate target add mail --host 192.168.1.16 --protocol https --mode vault --account admin --password   # vault: the Gate signs in
+sudo portunia-gate target edit mail --web-login fill                                                               # auto, fill or basic
 ```
 
 ### Deleting a server
@@ -881,7 +885,7 @@ After a change: `sudo systemctl restart portunia-gate` (cuts open sessions).
 | Groups, rules, settings | `groupe.cree` `groupe.supprime` `groupe.membre_ajoute` `regle.creee` `regle.modifiee` `regle.supprimee` `reglage.modifie` |
 | Servers | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
 | Files (Remote Desktop) | `fichier.copie` (direction, name, size, SHA-256, copy kept) `fichier.bloque` (attempts held back for lack of permission) |
-| Sessions | `session.ouverte` `session.fermee` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` |
+| Sessions | `session.ouverte` `session.fermee` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` |
 | Portal | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
 | Assistance | `assistance.ouverte` `assistance.fermee` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |

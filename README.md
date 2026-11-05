@@ -17,7 +17,7 @@ Users go through the Gate to reach servers: the Gate checks who they are, decide
 | **Recording and replay** | Every session in Vault or Recorded mode is recorded and signed. In Portunia, replay it like a video: keystrokes as subtitles, idle time skipped, sensitive commands highlighted, search across all sessions. Typed passwords are masked; every replay is logged. |
 | **Audit log** | Each event contains the fingerprint of the previous one: a deleted or edited line shows. |
 | **Remote Desktop** | Windows servers (RDP) behind the Gate, from Portunia or the browser. File copy is blocked unless the rule allows it; each copied file is logged with its SHA-256 fingerprint. |
-| **Web interfaces** | Administration consoles (vCenter, iDRAC, firewalls…) opened through the Gate, from Portunia or the portal, with each page opened logged. |
+| **Web interfaces** | Administration consoles (vCenter, iDRAC, firewalls…) and internal applications opened through the Gate, from Portunia or the portal, with each page opened logged. In vault mode, the Gate signs the user in: the password never reaches the browser. |
 | **Web portal** | For people without Portunia at hand: sign-in, terminal and Remote Desktop in the browser. Published through a Cloudflare tunnel run by the Gate, a dedicated relay in a DMZ, a proxy or WAF, or directly over HTTPS, with your PKI certificate or Let's Encrypt. Everything is set in Portunia. |
 | **Remote assistance** | Help someone on their Windows PC: they run a small program, read you a code, and choose view only or view and control. End-to-end encrypted, relayed by the Gate. |
 | **Portunia** | The Gate appears in Portunia's sidebar; its servers open with one click; administrators and auditors manage everything from Portunia Teams. |
