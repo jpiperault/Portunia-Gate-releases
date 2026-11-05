@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.30.1 · Portunia 0.70.1 · Updated: 5 November 2026*
+*Portunia Gate 0.31.0 · Portunia 0.71.0 · Updated: 5 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -291,6 +291,24 @@ sudo portunia-gate target list        # protocol, mode, fingerprint ("to remembe
 ```
 
 `--port` if the server does not listen on 3389; in jump and recorded modes, `--account` is optional (account offered at opening, never a password); in vault mode, it is required with `--password`. A rule's `--sftp` and `--tunnels` options only concern SSH. Then: `target edit` (address, mode, account…), `target forget` after reinstalling Windows, `target delete` (Gate 0.25 and later, see Appendix A).
+
+<a id="rdp-natif"></a>
+
+### Ordinary RDP clients: native RDP (Gate 0.31)
+
+-   The Gate's Windows servers also open in an ordinary RDP client: **mstsc**, **Windows App** (Mac), **Remmina**, **FreeRDP**. In Portunia, right-click the server › **Open in the Windows client (mstsc)**: Portunia asks the Gate for a **single-use .rdp file** and opens it. The token travels in the file's `loadbalanceinfo` field, which these clients send in their very first packet, before any encryption. Portunia (tab) and the web portal remain available as before.
+-   **Setting up**: Administer › **Native RDP** (or `sudo portunia-gate rdp on`). The entry is **closed by default** and listens on its own port, **3390**. You also set there the address written in the files (if workstations reach the Gate by another name or through NAT), the **modes** reachable this way and the **validity** of a file (2 minutes by default, 30 s to 10 min). Open the port on the firewall; with Docker, it is published as `PORTUNIA_GATE_RDP_PORT`.
+-   **Jump**: the Gate removes the token, then lets the connection through untouched; TLS and Windows authentication (NLA) happen end to end, the user types their Windows credentials in mstsc, nothing is recorded.
+-   **Vault**: the Gate opens the Windows session with the vault account; the workstation negotiates plain TLS with it, without NLA or password. It relays and records as for Portunia.
+-   **Recorded**: the same, with the Windows account the user types in Portunia when preparing the file. The Gate keeps it **in memory** until the client connects (at most the file's validity), never on disk, then forgets it. Without an account, only for a server that accepts TLS without NLA: the user then signs in on the Windows sign-in screen.
+-   **Certificate**: in Vault and Recorded, the client sees the Gate's API certificate; without a company certificate, mstsc warns once: compare the fingerprint shown in Administer › Native RDP (or `sudo portunia-gate rdp show`). In Jump, it sees the Windows server's own.
+-   **Log**: `rdp_natif.fichier` (file prepared, with or without an account), then the usual session events, the address followed by "(natif)"; refusals: `acces.refuse` with "type": "rdp natif" and the reason. A file is single-use: the client's automatic reconnection after a network cut is refused.
+
+```
+sudo portunia-gate rdp set --port 3390 --modes rebond,coffre,enregistre --ticket-seconds 120
+sudo portunia-gate rdp on
+sudo portunia-gate rdp show
+```
 
 <a id="web"></a>
 
@@ -645,6 +663,8 @@ A session closes in less than 30 seconds if the account is disabled, or if the r
 | Windows server in the vault refused, `cible.coffre_refuse` "serveur sans NLA" | The server does not require NLA: enable "Allow connections only from computers running Remote Desktop with Network Level Authentication" in its system properties, or switch it to recorded mode. |
 | Connection refused, `cible.empreinte_differente` | Server reinstalled? Check, then Forget the fingerprint. |
 | RDP servers greyed out | Remote Desktop extension not enabled in Portunia. |
+| mstsc does not connect (native RDP) | Entry closed, port 3390 blocked or not published (Docker): `sudo portunia-gate rdp show`. File already used or expired: prepare a new one. The reason is in the log (`acces.refuse`). |
+| Native RDP, Recorded: "the server requires NLA" | No Windows account given in Portunia when opening: give it. |
 
 ### Portal and assistance
 
@@ -802,6 +822,8 @@ ssh -p 2222 -L 5432:db-internal:5432 julien%web-01@gate   # tunnel (vault, if al
 
 Works with OpenSSH, PuTTY, MobaXterm, WinSCP. The TOTP code must have been enrolled beforehand (Portunia or `sudo portunia-gate user totp`). Single command, SFTP and tunnels: servers in the vault only.
 
+Remote Desktop outside Portunia's tab: mstsc, Windows App or Remmina, with the single-use .rdp file Portunia prepares (see [native RDP](#rdp-natif)).
+
 <a id="flux"></a>
 
 ## Appendix C — Ports and network flows
@@ -809,6 +831,7 @@ Works with OpenSSH, PuTTY, MobaXterm, WinSCP. The TOTP code must have been enrol
 | From | To | Port | Use |
 | --- | --- | --- | --- |
 | Workstations | Gate | 2222/tcp | SSH: sessions, SSH and RDP jump. |
+| Workstations | Gate | 3390/tcp | Native RDP (mstsc, Windows App, Remmina), only when open; port configurable. |
 | Workstations | Gate | 8443/tcp | Portunia's HTTPS API: sign-in, tokens, administration, audit, recorded and vault Remote Desktop, assistance (helper). |
 | Gate (local) | Gate | 8445/tcp | Portal over HTTP for cloudflared; listens on `127.0.0.1`, never exposed. |
 | Cloudflare | Gate | 8446/tcp | "Cloudflare proxy" option instead of the tunnel; Cloudflare addresses only. |

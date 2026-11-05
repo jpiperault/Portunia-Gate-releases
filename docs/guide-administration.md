@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.30.1 · Portunia 0.70.1 · Mise à jour : 5 novembre 2026*
+*Portunia Gate 0.31.0 · Portunia 0.71.0 · Mise à jour : 5 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -291,6 +291,24 @@ sudo portunia-gate target list        # protocole, mode, empreinte (« à mémor
 ```
 
 `--port` si le serveur n'écoute pas sur 3389 ; en rebond et enregistré, `--account` est facultatif (compte proposé à l'ouverture, jamais de mot de passe) ; en coffre, il est obligatoire avec `--password`. Les options `--sftp`, `--tunnels` d'une règle ne concernent que SSH. Ensuite : `target edit` (adresse, mode, compte…), `target forget` après une réinstallation de Windows, `target delete` (Gate 0.25 et suivantes, voir Annexe A).
+
+<a id="rdp-natif"></a>
+
+### Clients RDP ordinaires : RDP natif (Gate 0.31)
+
+-   Les serveurs Windows de la Gate s'ouvrent aussi dans un client RDP ordinaire : **mstsc**, **Windows App** (Mac), **Remmina**, **FreeRDP**. Dans Portunia, clic droit sur le serveur › **Ouvrir dans le client Windows (mstsc)** : Portunia demande à la Gate un **fichier .rdp à usage unique** et l'ouvre. Le jeton voyage dans le champ `loadbalanceinfo` du fichier, que ces clients envoient dès leur premier paquet, avant tout chiffrement. Portunia (onglet) et le portail web restent disponibles comme avant.
+-   **Mise en place** : Administrer › **RDP natif** (ou `sudo portunia-gate rdp on`). L'entrée est **fermée par défaut** et écoute sur son propre port, **3390**. On y règle aussi l'adresse écrite dans les fichiers (si les postes joignent la Gate par un autre nom ou un NAT), les **modes** accessibles ainsi et la **validité** d'un fichier (2 minutes par défaut, 30 s à 10 min). Ouvrez le port sur le pare-feu ; avec Docker, il est publié sous `PORTUNIA_GATE_RDP_PORT`.
+-   **Rebond** : la Gate retire le jeton puis laisse passer la connexion telle quelle ; TLS et authentification Windows (NLA) se font de bout en bout, l'utilisateur tape ses identifiants Windows dans mstsc, rien n'est enregistré.
+-   **Coffre** : la Gate ouvre la session Windows avec le compte du coffre ; le poste négocie avec elle un TLS simple, sans NLA ni mot de passe. Elle relaie et enregistre comme pour Portunia.
+-   **Enregistré** : pareil, avec le compte Windows que l'utilisateur tape dans Portunia en préparant le fichier. La Gate le garde **en mémoire** jusqu'à la connexion du client (au plus la validité du fichier), jamais sur disque, puis l'oublie. Sans compte, seulement pour un serveur qui accepte TLS sans NLA : l'utilisateur se connecte alors dans l'écran de connexion de Windows.
+-   **Certificat** : en coffre et enregistré, le client voit le certificat de l'API de la Gate ; sans certificat d'entreprise, mstsc avertit une fois : comparez l'empreinte affichée dans Administrer › RDP natif (ou `sudo portunia-gate rdp show`). En rebond, il voit celui du serveur Windows.
+-   **Journal** : `rdp_natif.fichier` (fichier préparé, avec ou sans compte), puis les événements habituels de la session, l'adresse suivie de « (natif) » ; refus : `acces.refuse` avec « type » : « rdp natif » et la raison. Un fichier ne sert qu'une fois : la reconnexion automatique du client après une coupure réseau est refusée.
+
+```
+sudo portunia-gate rdp set --port 3390 --modes rebond,coffre,enregistre --ticket-seconds 120
+sudo portunia-gate rdp on
+sudo portunia-gate rdp show
+```
 
 <a id="web"></a>
 
@@ -645,6 +663,8 @@ Une session se ferme en moins de 30 secondes si le compte est désactivé, ou si
 | Serveur Windows au coffre refusé, `cible.coffre_refuse` « serveur sans NLA » | Le serveur n'exige pas NLA : activez « N'autoriser que les connexions des ordinateurs exécutant le Bureau à distance avec authentification NLA » dans ses propriétés système, ou passez-le en mode enregistré. |
 | Connexion refusée, `cible.empreinte_differente` | Serveur réinstallé ? Vérifier, puis Oublier l'empreinte. |
 | Serveurs RDP grisés | Extension Bureau à distance non activée dans Portunia. |
+| mstsc ne se connecte pas (RDP natif) | Entrée fermée, port 3390 bloqué ou non publié (Docker) : `sudo portunia-gate rdp show`. Fichier déjà utilisé ou expiré : en préparer un nouveau. La raison est dans le journal (`acces.refuse`). |
+| RDP natif, enregistré : « le serveur exige NLA » | Aucun compte Windows donné dans Portunia à l'ouverture : le donner. |
 
 ### Portail et assistance
 
@@ -802,6 +822,8 @@ ssh -p 2222 -L 5432:db-interne:5432 julien%web-01@gate   # tunnel (coffre, si au
 
 Fonctionne avec OpenSSH, PuTTY, MobaXterm, WinSCP. Le code TOTP doit avoir été enrôlé avant (Portunia ou `sudo portunia-gate user totp`). Commande unique, SFTP et tunnels : serveurs en coffre seulement.
 
+Bureau à distance hors de l'onglet de Portunia : mstsc, Windows App ou Remmina, avec le fichier .rdp à usage unique que prépare Portunia (voir [RDP natif](#rdp-natif)).
+
 <a id="flux"></a>
 
 ## Annexe C — Ports et flux réseau
@@ -809,6 +831,7 @@ Fonctionne avec OpenSSH, PuTTY, MobaXterm, WinSCP. Le code TOTP doit avoir été
 | De | Vers | Port | Usage |
 | --- | --- | --- | --- |
 | Postes | Gate | 2222/tcp | SSH : sessions, rebond SSH et RDP. |
+| Postes | Gate | 3390/tcp | RDP natif (mstsc, Windows App, Remmina), seulement s'il est ouvert ; port réglable. |
 | Postes | Gate | 8443/tcp | API HTTPS de Portunia : connexion, jetons, administration, audit, Bureau à distance enregistré, assistance (dépanneur). |
 | Gate (local) | Gate | 8445/tcp | Portail en HTTP pour cloudflared ; écoute `127.0.0.1`, jamais exposé. |
 | Cloudflare | Gate | 8446/tcp | Option « proxy Cloudflare » au lieu du tunnel ; adresses Cloudflare seulement. |
