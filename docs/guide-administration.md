@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.29.0 · Portunia 0.65.0 · Mise à jour : 5 novembre 2026*
+*Portunia Gate 0.30.0 · Portunia 0.67.0 · Mise à jour : 5 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -237,7 +237,7 @@ Administrer › **Serveurs et coffre** › **Ajouter un serveur**. Chaque modifi
 
 | Champ | Détail |
 | --- | --- |
-| Protocole | SSH ou Bureau à distance (RDP). Le port passe à 22 ou 3389 tant que vous ne l'avez pas changé. |
+| Protocole | SSH, Bureau à distance (RDP), ou Interface web (HTTPS ou HTTP, Gate 0.30). Le port passe à 22, 3389, 443 ou 80 tant que vous ne l'avez pas changé. |
 | Nom | Sans espace (`web-01`) : c'est aussi le nom à taper avec un client SSH (`julien%web-01@gate`). |
 | Dossier | Range les serveurs sous la Gate dans Portunia (Production, Recette, Réseau…). |
 | Adresse, Port | Telles que la Gate les joint (adresse interne). Changer l'adresse d'un serveur qui a un secret dans le coffre oblige à **ressaisir le secret** : un jeton d'administration volé ne suffit pas à l'envoyer vers une autre machine. Le journal note l'ancienne et la nouvelle adresse. Les adresses de métadonnées des hébergeurs cloud (`169.254.169.254`…) sont refusées. |
@@ -291,6 +291,22 @@ sudo portunia-gate target list        # protocole, mode, empreinte (« à mémor
 ```
 
 `--port` si le serveur n'écoute pas sur 3389 ; en rebond et enregistré, `--account` est facultatif (compte proposé à l'ouverture, jamais de mot de passe) ; en coffre, il est obligatoire avec `--password`. Les options `--sftp`, `--tunnels` d'une règle ne concernent que SSH. Ensuite : `target edit` (adresse, mode, compte…), `target forget` après une réinstallation de Windows, `target delete` (Gate 0.25 et suivantes, voir Annexe A).
+
+<a id="web"></a>
+
+### Interfaces web (Gate 0.30)
+
+-   Pour les consoles d'administration : vCenter, iDRAC, iLO, pare-feu, NAS… Protocole **Interface web (HTTPS)** ou **(HTTP)**, adresse et port du serveur ; mode **enregistré** seulement. Les identifiants de l'application se tapent dans sa page, comme d'habitude.
+-   La Gate relaie chaque requête : la règle est revérifiée au plus toutes les 30 secondes, chaque **page ouverte** est notée au journal (`web.page` : serveur, chemin), l'ouverture aussi (`web.ouvert`). Les images, scripts et appels de l'application ne sont pas notés. Ni l'image ni la frappe ne sont enregistrées.
+-   Le certificat d'un serveur HTTPS est vérifié par son empreinte, gardée à la première connexion, comme pour le Bureau à distance.
+-   **Depuis Portunia** : le serveur s'ouvre dans une fenêtre dédiée, à travers un relais local vers la Gate ; la session web dure 8 heures.
+-   **Depuis le portail web** : dans un onglet, à l'adresse `/web/<nom>/`. Un navigateur a **une interface web à la fois** : en ouvrir une seconde remplace la première. L'application partage l'adresse du portail : ne publiez sur le portail que des applications de confiance.
+-   Les cookies de la Gate ne sont jamais transmis au serveur ; l'adresse du visiteur non plus (le serveur ne voit que la Gate). Les WebSocket de l'application (consoles, rafraîchissements) passent.
+
+```
+sudo portunia-gate target add vcenter --host 10.0.4.10 --protocol https --folder Infrastructure
+sudo portunia-gate rule add vsphere --group "Admins VMware" --targets vcenter --days lun-ven --hours 7-20
+```
 
 ### Supprimer un serveur
 
@@ -354,7 +370,7 @@ En ligne de commande : `sudo portunia-gate setting auth_policy "password+totp,ke
 
 Pour ouvrir ses serveurs depuis un navigateur, sans Portunia : connexion, liste des serveurs autorisés, terminal SSH ou Bureau à distance dans un onglet. Pas d'administration. Mêmes règles, même coffre, même enregistrement, même journal ; une session web apparaît dans l'audit avec « (web) » après l'adresse.
 
-Bureau à distance dans le navigateur, dans les trois modes (Gate 0.29) : l'utilisateur tape ses identifiants Windows (rien en mode coffre, où la Gate ouvre la session) et choisit la **qualité d'affichage** (Équilibrée, Rapide ou Maximale, retenue par le navigateur) ; la taille du bureau Windows suit celle de la fenêtre. Le client se charge une fois, puis reste en cache jusqu'à la version suivante de la Gate.
+Interfaces web (Gate 0.30) : bouton du serveur, puis l'application dans un nouvel onglet (voir [§7](#web)). Bureau à distance dans le navigateur, dans les trois modes (Gate 0.29) : l'utilisateur tape ses identifiants Windows (rien en mode coffre, où la Gate ouvre la session) et choisit la **qualité d'affichage** (Équilibrée, Rapide ou Maximale, retenue par le navigateur) ; la taille du bureau Windows suit celle de la fenêtre. Le client se charge une fois, puis reste en cache jusqu'à la version suivante de la Gate.
 
 **Fichiers** (Gate 0.28, règle avec l'option Fichiers, copier-coller du portail permis) : bouton **Envoyer des fichiers** ou fichiers déposés sur le bureau, puis collés dans Windows (Ctrl+V) ; dans l'autre sens, les fichiers copiés dans Windows (Ctrl+C) apparaissent dans un panneau, avec un bouton **Télécharger**. Chaque fichier est noté au journal avec son empreinte.
 
@@ -688,6 +704,7 @@ sudo portunia-gate target add rec-app --host 10.0.2.5 --mode enregistre --folder
 sudo portunia-gate target add fw-edge --host 10.0.0.1 --mode rebond --folder Réseau
 sudo portunia-gate target add srv-ad-01 --host 10.0.3.10 --protocol rdp --mode enregistre --folder Windows
 sudo portunia-gate target add srv-paie --host 10.0.3.12 --protocol rdp --mode coffre --account "ACME\svc-paie" --password   # RDP au coffre (Gate 0.29)
+sudo portunia-gate target add vcenter --host 10.0.4.10 --protocol https --folder Infrastructure   # interface web, mode enregistré (Gate 0.30)
 sudo portunia-gate target add rds-02 --host 10.0.3.11 --port 3390 --protocol rdp --mode rebond --account "ACME\support"
 sudo portunia-gate target list
 sudo portunia-gate target edit web-01 --folder Prod --account root   # aussi --rename, --host, --port, --mode
@@ -796,7 +813,7 @@ Fonctionne avec OpenSSH, PuTTY, MobaXterm, WinSCP. Le code TOTP doit avoir été
 | Cloudflare | Gate | 8446/tcp | Option « proxy Cloudflare » au lieu du tunnel ; adresses Cloudflare seulement. |
 | Gate | Cloudflare | sortant | Tunnel cloudflared lancé par la Gate (portail et page d'assistance) ; téléchargement de cloudflared depuis GitHub. |
 | Gate | github.com | 443/tcp | Téléchargement de cloudflared (une fois par version) et de Portunia Assistance. |
-| Gate | Serveurs | 22, 3389… | Connexions vers les serveurs protégés. |
+| Gate | Serveurs | 22, 3389, 443… | Connexions vers les serveurs protégés. |
 | Gate | github.com | 443 | Mises à jour (paquet) et téléchargement de Portunia Assistance. |
 | Postes | github.com | 443 | Mises à jour de Portunia. |
 
@@ -840,7 +857,7 @@ Après une modification : `sudo systemctl restart portunia-gate` (coupe les sess
 | Groupes, règles, réglages | `groupe.cree` `groupe.supprime` `groupe.membre_ajoute` `regle.creee` `regle.modifiee` `regle.supprimee` `reglage.modifie` |
 | Serveurs | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
 | Fichiers (Bureau à distance) | `fichier.copie` (sens, nom, taille, SHA-256, copie gardée) `fichier.bloque` (tentatives retenues faute d'autorisation) |
-| Sessions | `session.ouverte` `session.fermee` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` |
+| Sessions | `session.ouverte` `session.fermee` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` |
 | Portail | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
 | Assistance | `assistance.ouverte` `assistance.fermee` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |

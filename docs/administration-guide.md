@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.29.0 · Portunia 0.65.0 · Updated: 5 November 2026*
+*Portunia Gate 0.30.0 · Portunia 0.67.0 · Updated: 5 November 2026*
 
 > The Portunia user guide (in French) is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -237,7 +237,7 @@ Administer › **Servers and vault** › **Add a server**. Every change is logge
 
 | Field | Details |
 | --- | --- |
-| Protocol | SSH or Remote Desktop (RDP). The port switches to 22 or 3389 as long as you have not changed it. |
+| Protocol | SSH, Remote Desktop (RDP), or Web interface (HTTPS or HTTP, Gate 0.30). The port switches to 22, 3389, 443 or 80 as long as you have not changed it. |
 | Name | No spaces (`web-01`): it is also the name to type with an SSH client (`julien%web-01@gate`). |
 | Folder | Sorts the servers under the Gate in Portunia (Production, Staging, Network…). |
 | Address, Port | As the Gate reaches them (internal address). Changing the address of a server that has a secret in the vault requires **typing the secret again**: a stolen administration token is not enough to send it to another machine. The log records the old and new address. Cloud providers' metadata addresses (`169.254.169.254`…) are refused. |
@@ -291,6 +291,22 @@ sudo portunia-gate target list        # protocol, mode, fingerprint ("to remembe
 ```
 
 `--port` if the server does not listen on 3389; in jump and recorded modes, `--account` is optional (account offered at opening, never a password); in vault mode, it is required with `--password`. A rule's `--sftp` and `--tunnels` options only concern SSH. Then: `target edit` (address, mode, account…), `target forget` after reinstalling Windows, `target delete` (Gate 0.25 and later, see Appendix A).
+
+<a id="web"></a>
+
+### Web interfaces (Gate 0.30)
+
+-   For administration consoles: vCenter, iDRAC, iLO, firewalls, NAS… Protocol **Web interface (HTTPS)** or **(HTTP)**, the server's address and port; recorded mode only. The application's credentials are typed in its page, as usual.
+-   The Gate relays every request: the rule is checked again at most every 30 seconds, each **page opened** is logged (`web.page`: server, path), and so is the opening (`web.ouvert`). The application's images, scripts and calls are not logged. Neither the image nor the keystrokes are recorded.
+-   The certificate of an HTTPS server is checked by its fingerprint, kept on the first connection, as for Remote Desktop.
+-   **From Portunia**: the server opens in a dedicated window, through a local relay to the Gate; the web session lasts 8 hours.
+-   **From the web portal**: in a tab, at `/web/<name>/`. A browser has **one web interface at a time**: opening a second one replaces the first. The application shares the portal's address: only publish trusted applications on the portal.
+-   The Gate's cookies are never sent to the server; neither is the visitor's address (the server only sees the Gate). The application's WebSockets (consoles, live updates) go through.
+
+```
+sudo portunia-gate target add vcenter --host 10.0.4.10 --protocol https --folder Infrastructure
+sudo portunia-gate rule add vsphere --group "VMware admins" --targets vcenter --days mon-fri --hours 7-20
+```
 
 ### Deleting a server
 
@@ -354,7 +370,7 @@ On the command line: `sudo portunia-gate setting auth_policy "password+totp,key+
 
 To open one's servers from a browser, without Portunia: sign-in, list of allowed servers, SSH terminal or Remote Desktop in a tab. No administration. Same rules, same vault, same recording, same log; a web session appears in the audit with "(web)" after the address.
 
-Remote Desktop in the browser, in all three modes (Gate 0.29): the user types their Windows credentials (nothing in vault mode, where the Gate opens the session) and chooses the **display quality** (Balanced, Fast or Best, remembered by the browser); the size of the Windows desktop follows the window's. The client loads once, then stays cached until the Gate's next version.
+Web interfaces (Gate 0.30): the server's button, then the application in a new tab (see [§7](#web)). Remote Desktop in the browser, in all three modes (Gate 0.29): the user types their Windows credentials (nothing in vault mode, where the Gate opens the session) and chooses the **display quality** (Balanced, Fast or Best, remembered by the browser); the size of the Windows desktop follows the window's. The client loads once, then stays cached until the Gate's next version.
 
 **Files** (Gate 0.28, rule with the Files option, portal copy-paste allowed): **Send files** button or files dropped on the desktop, then pasted into Windows (Ctrl+V); the other way round, files copied in Windows (Ctrl+C) appear in a panel, with a **Download** button. Each file is logged with its fingerprint.
 
@@ -688,6 +704,7 @@ sudo portunia-gate target add stg-app --host 10.0.2.5 --mode enregistre --folder
 sudo portunia-gate target add fw-edge --host 10.0.0.1 --mode rebond --folder Network
 sudo portunia-gate target add srv-ad-01 --host 10.0.3.10 --protocol rdp --mode enregistre --folder Windows
 sudo portunia-gate target add srv-payroll --host 10.0.3.12 --protocol rdp --mode coffre --account "ACME\svc-payroll" --password   # RDP in the vault (Gate 0.29)
+sudo portunia-gate target add vcenter --host 10.0.4.10 --protocol https --folder Infrastructure   # web interface, recorded mode (Gate 0.30)
 sudo portunia-gate target add rds-02 --host 10.0.3.11 --port 3390 --protocol rdp --mode rebond --account "ACME\support"
 sudo portunia-gate target list
 sudo portunia-gate target edit web-01 --folder Prod --account root   # also --rename, --host, --port, --mode
@@ -796,7 +813,7 @@ Works with OpenSSH, PuTTY, MobaXterm, WinSCP. The TOTP code must have been enrol
 | Cloudflare | Gate | 8446/tcp | "Cloudflare proxy" option instead of the tunnel; Cloudflare addresses only. |
 | Gate | Cloudflare | outbound | cloudflared tunnel started by the Gate (portal and assistance page); cloudflared downloaded from GitHub. |
 | Gate | github.com | 443/tcp | Download of cloudflared (once per version) and of Portunia Assistance. |
-| Gate | Servers | 22, 3389… | Connections to the protected servers. |
+| Gate | Servers | 22, 3389, 443… | Connections to the protected servers. |
 | Gate | github.com | 443 | Updates (package) and download of Portunia Assistance. |
 | Workstations | github.com | 443 | Portunia updates. |
 
@@ -840,7 +857,7 @@ After a change: `sudo systemctl restart portunia-gate` (cuts open sessions).
 | Groups, rules, settings | `groupe.cree` `groupe.supprime` `groupe.membre_ajoute` `regle.creee` `regle.modifiee` `regle.supprimee` `reglage.modifie` |
 | Servers | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
 | Files (Remote Desktop) | `fichier.copie` (direction, name, size, SHA-256, copy kept) `fichier.bloque` (attempts held back for lack of permission) |
-| Sessions | `session.ouverte` `session.fermee` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` |
+| Sessions | `session.ouverte` `session.fermee` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` |
 | Portal | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
 | Assistance | `assistance.ouverte` `assistance.fermee` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |
