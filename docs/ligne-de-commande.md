@@ -29,7 +29,7 @@ sudo portunia-gate info                                  # version, empreintes S
 sudo portunia-gate hardening                             # état du durcissement du serveur et alertes
 ```
 
-`serve` lance la Gate : c'est le service `portunia-gate` qui s'en charge, ne la lancez pas à la main. L'installation, la mise à jour et le durcissement du serveur passent par `installer.sh` (voir le [guide d'administration](guide-administration.md)).
+`serve` lance la Gate : c'est le service `portunia-gate` qui s'en charge, ne la lancez pas à la main. L'installation, la mise à jour et le durcissement du serveur passent par `installer.sh` (voir le [guide d'administration](https://github.com/jpiperault/Portunia-Gate-releases/blob/main/docs/guide-administration.md)).
 
 ## Comptes
 
@@ -82,7 +82,7 @@ sudo portunia-gate target forget srv-ad-01                # serveur réinstallé
 sudo portunia-gate target delete fw-edge                  # secret effacé ; sessions et enregistrements gardés
 ```
 
-- Bureau à distance (`--protocol rdp`) : donnez toujours `--mode enregistre` ou `--mode rebond` (le coffre n'existe pas encore en RDP). Port 3389 par défaut.
+- Bureau à distance (`--protocol rdp`) : `--mode enregistre`, `--mode rebond`, ou `--mode coffre` (0.29) avec `--account` et `--password` (un serveur RDP au coffre garde un mot de passe, pas une clé). Port 3389 par défaut.
 - Le portail web affiche les serveurs en `coffre` (SSH) et `enregistre` (SSH et RDP) ; les serveurs en `rebond` s'ouvrent depuis Portunia, ou avec `ssh -J` / `ssh -L`.
 
 ## Règles d'accès

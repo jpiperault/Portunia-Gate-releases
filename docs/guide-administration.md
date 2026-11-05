@@ -1,8 +1,8 @@
 # Guide d'administration
 
-*Portunia Gate 0.28.0 · Portunia 0.64.0 · Mise à jour : 5 novembre 2026*
+*Portunia Gate 0.29.0 · Portunia 0.65.0 · Mise à jour : 5 novembre 2026*
 
-> Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md).
+> Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
 Installer, régler et exploiter la Gate, et préparer Portunia sur les postes : comptes, serveurs, règles, portail web, assistance, audit, sauvegardes, mises à jour et dépannage. Chaque écran est décrit avec ses champs, ses valeurs par défaut et les commandes équivalentes sur le serveur.
 
@@ -243,7 +243,7 @@ Administrer › **Serveurs et coffre** › **Ajouter un serveur**. Chaque modifi
 | Adresse, Port | Telles que la Gate les joint (adresse interne). Changer l'adresse d'un serveur qui a un secret dans le coffre oblige à **ressaisir le secret** : un jeton d'administration volé ne suffit pas à l'envoyer vers une autre machine. Le journal note l'ancienne et la nouvelle adresse. Les adresses de métadonnées des hébergeurs cloud (`169.254.169.254`…) sont refusées. |
 | Mode | Rebond, enregistré ou coffre (ci-dessous). |
 | Compte sur le serveur | Obligatoire en coffre. En Bureau à distance : `DOMAINE\compte`, proposé à l'ouverture. |
-| Secret du coffre | En coffre seulement : *Générer une clé et l'installer*, *Mot de passe du compte*, *Clé privée existante* (sans phrase de passe). En modification : *Garder le secret actuel*. |
+| Secret du coffre | En coffre seulement : *Générer une clé et l'installer*, *Mot de passe du compte*, *Clé privée existante* (sans phrase de passe) ; en Bureau à distance, le mot de passe du compte seulement. En modification : *Garder le secret actuel*. |
 
 <a id="modes"></a>
 
@@ -255,8 +255,8 @@ Administrer › **Serveurs et coffre** › **Ajouter un serveur**. Chaque modifi
 | La Gate voit le contenu | Non (chiffré de bout en bout) | Oui | Oui |
 | Enregistrement | Non : connexion, durée, octets | Oui, signé | Oui, signé |
 | SFTP, commande, tunnel | — | — | Oui, selon la règle |
-| Portail web | Non (Portunia seulement) | SSH et RDP | SSH |
-| Bureau à distance | Oui | Oui | Pas encore |
+| Portail web | RDP seulement, relayé sans enregistrement (SSH : Portunia seulement) | SSH et RDP | SSH et RDP |
+| Bureau à distance | Oui | Oui | Oui (Gate 0.29) : session Windows ouverte par la Gate |
 | Quand le choisir | Équipements dont le contenu ne doit pas passer en clair par la Gate ; besoin de traçabilité minimale. | Chacun garde ses comptes personnels sur les serveurs, mais on veut l'enregistrement. | **Le cas conseillé** : comptes partagés, prestataires, départs sans changer de mot de passe. |
 
 ### Mettre un serveur au coffre
@@ -271,23 +271,26 @@ Un secret **ne se relit jamais**, ni dans Portunia ni en ligne de commande. Si l
 
 ### Serveurs Windows (Bureau à distance)
 
--   Modes **rebond** et **enregistré** ; l'utilisateur tape ses identifiants Windows à chaque ouverture, ni Portunia ni la Gate ne les gardent.
+-   Modes **rebond** et **enregistré** : l'utilisateur tape ses identifiants Windows à chaque ouverture, ni Portunia ni la Gate ne les gardent.
 -   En enregistré, l'authentification Windows (NLA) se fait entre le poste et le serveur : la Gate enregistre l'image, les clics, les copier-coller (masqués jusqu'à révélation) et la frappe si la règle le demande, sans voir le mot de passe.
+-   **Coffre** (Gate 0.29) : la Gate garde le mot de passe du compte Windows (local ou `DOMAINE\compte`) et ouvre elle-même la session : l'authentification NLA se fait entre la Gate et le serveur, puis la Gate relaie et enregistre comme en mode enregistré. L'utilisateur n'a rien à taper et ne voit jamais le mot de passe ; Portunia et le portail web s'authentifient auprès de la Gate avec leur jeton à usage unique. Le serveur doit proposer NLA (réglage par défaut de Windows) ; sinon la connexion est refusée (`cible.coffre_refuse`, raison « serveur sans NLA »). Le coffre RDP garde un mot de passe, pas de clé.
+-   **Rebond depuis le portail web** (Gate 0.29) : le navigateur ne peut pas faire de tunnel de bout en bout ; la Gate relaie donc la session sans l'enregistrer (`rebond.ouvert`, `rebond.ferme` : durée et octets). Depuis Portunia, le rebond reste de bout en bout. Si le contenu ne doit jamais passer en clair par la Gate, ne mettez pas ces serveurs dans le groupe du portail.
 -   La Gate doit joindre le port 3389. Les serveurs RDP n'apparaissent pas dans le menu SSH de la Gate.
 -   À l'ouverture, l'utilisateur choisit la **qualité d'affichage**, dans Portunia comme dans le portail web : *Équilibrée* (par défaut), *Rapide* (sans fond d'écran, thèmes ni animations, pour les liaisons lentes) ou *Maximale* (tous les effets visuels). Ce choix ne change rien à l'enregistrement ni à sa relecture.
 -   **Copie de fichiers** (Gate 0.28) : permise seulement par une règle avec l'option **Fichiers** ; sinon la Gate la bloque, même avec un client qui la tenterait. Chaque fichier copié est noté au journal avec son empreinte SHA-256 ; `sudo portunia-gate setting file_copies_mb 200` garde en plus une copie des fichiers (jusqu'à 200 Mo par session) à côté de l'enregistrement. En mode rebond, la Gate ne voit pas le flux : bloquez alors la copie par une stratégie de groupe Windows.
 
-**En ligne de commande**, un serveur Windows se déclare avec `--protocol rdp` et **toujours** un `--mode` : sans lui, la commande prend le mode coffre, refusé en Bureau à distance. L'accès se donne ensuite comme pour SSH, par un groupe et une règle :
+**En ligne de commande**, un serveur Windows se déclare avec `--protocol rdp` et un `--mode` : sans lui, la commande prend le mode coffre, qui demande alors le compte et son mot de passe. L'accès se donne ensuite comme pour SSH, par un groupe et une règle :
 
 ```
 sudo portunia-gate target add srv-compta --host 10.0.5.12 --protocol rdp --mode enregistre --account "ACME\compta" --folder Windows
+sudo portunia-gate target add srv-paie --host 10.0.5.13 --protocol rdp --mode coffre --account "ACME\svc-paie" --password --folder Windows
 sudo portunia-gate group add Comptabilité
 sudo portunia-gate group member Comptabilité alice bob
 sudo portunia-gate rule add compta-rdp --group Comptabilité --targets srv-compta --days lun-ven --hours 7-20
 sudo portunia-gate target list        # protocole, mode, empreinte (« à mémoriser » avant la première connexion)
 ```
 
-`--port` si le serveur n'écoute pas sur 3389 ; `--account` est facultatif (compte proposé à l'ouverture, jamais de mot de passe). Les options `--sftp`, `--tunnels` d'une règle ne concernent que SSH. Ensuite : `target edit` (adresse, mode, compte…), `target forget` après une réinstallation de Windows, `target delete` (Gate 0.25 et suivantes, voir Annexe A).
+`--port` si le serveur n'écoute pas sur 3389 ; en rebond et enregistré, `--account` est facultatif (compte proposé à l'ouverture, jamais de mot de passe) ; en coffre, il est obligatoire avec `--password`. Les options `--sftp`, `--tunnels` d'une règle ne concernent que SSH. Ensuite : `target edit` (adresse, mode, compte…), `target forget` après une réinstallation de Windows, `target delete` (Gate 0.25 et suivantes, voir Annexe A).
 
 ### Supprimer un serveur
 
@@ -307,7 +310,7 @@ Administrer › **Règles** › **Nouvelle règle**. Principe : **tout ce qu'auc
 | De / À (heure) | De 0 à 23, à 1 à 24 ; vide = toute la journée. Une plage peut passer minuit (22 → 6). Fuseau de la Gate (`TZ`). |
 | Transferts de fichiers | SFTP, `scp`, `rsync` (serveurs en coffre). |
 | Tunnels | Redirection de ports `ssh -L` à travers le serveur (coffre). Les redirections distantes `-R` sont toujours refusées. |
-| Fichiers (Bureau à distance) | Copie de fichiers par le presse-papiers, dans les deux sens, sur les serveurs Windows en mode enregistré (Gate 0.28). **Sans cette option, la Gate la bloque** ; le texte copié passe toujours. Avec elle, chaque fichier est inscrit au journal (`fichier.copie` : sens, nom, taille, empreinte SHA-256) et apparaît dans l'enregistrement. En ligne de commande : `--files` ; la case arrive dans Portunia avec sa prochaine version. |
+| Fichiers (Bureau à distance) | Copie de fichiers par le presse-papiers, dans les deux sens, sur les serveurs Windows en mode enregistré (Gate 0.28) ou coffre (Gate 0.29). **Sans cette option, la Gate la bloque** ; le texte copié passe toujours. Avec elle, chaque fichier est inscrit au journal (`fichier.copie` : sens, nom, taille, empreinte SHA-256) et apparaît dans l'enregistrement. En ligne de commande : `--files` ; la case arrive dans Portunia avec sa prochaine version. |
 | Enregistrer aussi la frappe | Sous-titres et recherche dans ce qui est tapé. **Capte aussi les mots de passe tapés** (masqués à la relecture, révélables par un administrateur). |
 | Expire le | Vide = jamais. Après la date, la règle passe « expirée ». |
 
@@ -351,7 +354,7 @@ En ligne de commande : `sudo portunia-gate setting auth_policy "password+totp,ke
 
 Pour ouvrir ses serveurs depuis un navigateur, sans Portunia : connexion, liste des serveurs autorisés, terminal SSH ou Bureau à distance dans un onglet. Pas d'administration. Mêmes règles, même coffre, même enregistrement, même journal ; une session web apparaît dans l'audit avec « (web) » après l'adresse.
 
-Bureau à distance dans le navigateur : l'utilisateur tape ses identifiants Windows et choisit la **qualité d'affichage** (Équilibrée, Rapide ou Maximale, retenue par le navigateur) ; la taille du bureau Windows suit celle de la fenêtre. Le client se charge une fois, puis reste en cache jusqu'à la version suivante de la Gate.
+Bureau à distance dans le navigateur, dans les trois modes (Gate 0.29) : l'utilisateur tape ses identifiants Windows (rien en mode coffre, où la Gate ouvre la session) et choisit la **qualité d'affichage** (Équilibrée, Rapide ou Maximale, retenue par le navigateur) ; la taille du bureau Windows suit celle de la fenêtre. Le client se charge une fois, puis reste en cache jusqu'à la version suivante de la Gate.
 
 **Fichiers** (Gate 0.28, règle avec l'option Fichiers, copier-coller du portail permis) : bouton **Envoyer des fichiers** ou fichiers déposés sur le bureau, puis collés dans Windows (Ctrl+V) ; dans l'autre sens, les fichiers copiés dans Windows (Ctrl+C) apparaissent dans un panneau, avec un bouton **Télécharger**. Chaque fichier est noté au journal avec son empreinte.
 
@@ -622,6 +625,7 @@ Une session se ferme en moins de 30 secondes si le compte est désactivé, ou si
 | « Session de la Gate expirée » | Se reconnecter depuis la section Gates. |
 | Liste de serveurs vide | Pas de règle active pour ses groupes (voir §8). Les heures suivent le fuseau de la Gate. |
 | « Le compte du coffre a été refusé » | Secret changé sur le serveur : remplacer le secret. |
+| Serveur Windows au coffre refusé, `cible.coffre_refuse` « serveur sans NLA » | Le serveur n'exige pas NLA : activez « N'autoriser que les connexions des ordinateurs exécutant le Bureau à distance avec authentification NLA » dans ses propriétés système, ou passez-le en mode enregistré. |
 | Connexion refusée, `cible.empreinte_differente` | Serveur réinstallé ? Vérifier, puis Oublier l'empreinte. |
 | Serveurs RDP grisés | Extension Bureau à distance non activée dans Portunia. |
 
@@ -682,7 +686,8 @@ sudo portunia-gate target add web-01 --host 10.0.1.11 --mode coffre --account ad
 sudo portunia-gate target add app-02 --host 10.0.1.12 --mode coffre --account deploy --key-file /root/deploy_ed25519
 sudo portunia-gate target add rec-app --host 10.0.2.5 --mode enregistre --folder Recette
 sudo portunia-gate target add fw-edge --host 10.0.0.1 --mode rebond --folder Réseau
-sudo portunia-gate target add srv-ad-01 --host 10.0.3.10 --protocol rdp --mode enregistre --folder Windows   # RDP : --mode obligatoire (enregistre ou rebond)
+sudo portunia-gate target add srv-ad-01 --host 10.0.3.10 --protocol rdp --mode enregistre --folder Windows
+sudo portunia-gate target add srv-paie --host 10.0.3.12 --protocol rdp --mode coffre --account "ACME\svc-paie" --password   # RDP au coffre (Gate 0.29)
 sudo portunia-gate target add rds-02 --host 10.0.3.11 --port 3390 --protocol rdp --mode rebond --account "ACME\support"
 sudo portunia-gate target list
 sudo portunia-gate target edit web-01 --folder Prod --account root   # aussi --rename, --host, --port, --mode
