@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.30.0 · Portunia 0.67.0 · Updated: 5 November 2026*
+*Portunia Gate 0.30.0 · Portunia 0.69.0 · Updated: 5 November 2026*
 
 > The Portunia user guide (in French) is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -326,7 +326,7 @@ Administer › **Rules** › **New rule**. Principle: **whatever no rule allows 
 | From / To (hour) | From 0 to 23, to 1 to 24; empty = all day. A range may cross midnight (22 → 6). The Gate's time zone (`TZ`). |
 | File transfers | SFTP, `scp`, `rsync` (servers in the vault). |
 | Tunnels | Port forwarding `ssh -L` through the server (vault). Remote forwardings `-R` are always refused. |
-| Files (Remote Desktop) | File copy through the clipboard, in both directions, on Windows servers in recorded mode (Gate 0.28) or vault mode (Gate 0.29). **Without this option, the Gate blocks it**; copied text always goes through. With it, each file is logged (`fichier.copie`: direction, name, size, SHA-256 fingerprint) and appears in the recording. On the command line: `--files`; the box comes to Portunia with its next version. |
+| Files (Remote Desktop) | File copy through the clipboard, in both directions, on Windows servers in recorded mode (Gate 0.28) or vault mode (Gate 0.29). **Without this option, the Gate blocks it**; copied text always goes through. With it, each file is logged (`fichier.copie`: direction, name, size, SHA-256 fingerprint) and appears in the recording. On the command line: `--files`; in Portunia (0.69): the rule's « Remote Desktop: file copy » box, and the Options column shows « RDP files ». Remote Desktop tabs of Portunia 0.69 send and retrieve files; in jump mode, where the Gate sees nothing, Portunia applies the option. |
 | Also record keystrokes | Subtitles and search in what is typed. **Also captures typed passwords** (masked on replay, revealable by an administrator). |
 | Expires on | Empty = never. After the date, the rule becomes "expired". |
 
@@ -361,6 +361,7 @@ Administer › **Settings**.
 | Remember the password | no | Allows Portunia to keep the Gate password; the code is still asked. |
 | Replay one's own sessions | no | Adds "My sessions" to the Gate's menu for each account, without being able to reveal masked input. |
 | Sensitive commands | `rm -rf`, `rm -fr`, `mkfs`, `dd if=`, `chmod -R 777`, `shutdown`, `reboot`, `iptables -F`, `userdel`, `DROP TABLE`, `DROP DATABASE` | One per line; marked in red on the player's timeline. Add those of your trade (`systemctl stop`, `kubectl delete`…). |
+| Copies of copied files (Gate 0.28) | 0 MB | Size kept per session of the files copied in Remote Desktop, next to the recording (0 to 10240 MB; 0: only name, size and SHA-256 are logged). In Portunia 0.69: Settings › Remote Desktop file copy; on the command line: `setting file_copies_mb`. |
 
 On the command line: `sudo portunia-gate setting auth_policy "password+totp,key+totp"`, `setting banner "…"`, `setting name "…"`, `setting language en` (without a value: shows the current value).
 
@@ -452,7 +453,7 @@ Log: `assistance.ouverte`, `assistance.fermee`, `assistance.reglage`, `assistanc
 
 ## 12\. Audit and session replay
 
-The Gate's **⋯** menu › **Audit** › **Sessions** (administrators and auditors). Filters by account, server, period (7 days, 30 days, 12 months), "With keystrokes" box. The search covers the keystrokes and the displayed text of all sessions: the "Found" column gives the moment and the excerpt; a click opens the replay at that point.
+The Gate's **⋯** menu › **Audit** › **Sessions** (administrators and auditors). Filters by account, server, period (7 days, 30 days, 12 months), "With keystrokes" and "With file copies" boxes (Portunia 0.69; the session then shows how many files, and the player places them on the timeline). The search covers the keystrokes and the displayed text of all sessions: the "Found" column gives the moment and the excerpt; a click opens the replay at that point.
 
 ### The player
 

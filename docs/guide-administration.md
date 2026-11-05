@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.30.0 · Portunia 0.67.0 · Mise à jour : 5 novembre 2026*
+*Portunia Gate 0.30.0 · Portunia 0.69.0 · Mise à jour : 5 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -326,7 +326,7 @@ Administrer › **Règles** › **Nouvelle règle**. Principe : **tout ce qu'auc
 | De / À (heure) | De 0 à 23, à 1 à 24 ; vide = toute la journée. Une plage peut passer minuit (22 → 6). Fuseau de la Gate (`TZ`). |
 | Transferts de fichiers | SFTP, `scp`, `rsync` (serveurs en coffre). |
 | Tunnels | Redirection de ports `ssh -L` à travers le serveur (coffre). Les redirections distantes `-R` sont toujours refusées. |
-| Fichiers (Bureau à distance) | Copie de fichiers par le presse-papiers, dans les deux sens, sur les serveurs Windows en mode enregistré (Gate 0.28) ou coffre (Gate 0.29). **Sans cette option, la Gate la bloque** ; le texte copié passe toujours. Avec elle, chaque fichier est inscrit au journal (`fichier.copie` : sens, nom, taille, empreinte SHA-256) et apparaît dans l'enregistrement. En ligne de commande : `--files` ; la case arrive dans Portunia avec sa prochaine version. |
+| Fichiers (Bureau à distance) | Copie de fichiers par le presse-papiers, dans les deux sens, sur les serveurs Windows en mode enregistré (Gate 0.28) ou coffre (Gate 0.29). **Sans cette option, la Gate la bloque** ; le texte copié passe toujours. Avec elle, chaque fichier est inscrit au journal (`fichier.copie` : sens, nom, taille, empreinte SHA-256) et apparaît dans l'enregistrement. En ligne de commande : `--files` ; dans Portunia (0.69) : case « Bureau à distance : copie de fichiers » de la règle, et la colonne Options affiche « fichiers RDP ». Les onglets Bureau à distance de Portunia 0.69 envoient et récupèrent des fichiers ; en mode rebond, où la Gate ne voit rien, c'est Portunia qui applique l'option. |
 | Enregistrer aussi la frappe | Sous-titres et recherche dans ce qui est tapé. **Capte aussi les mots de passe tapés** (masqués à la relecture, révélables par un administrateur). |
 | Expire le | Vide = jamais. Après la date, la règle passe « expirée ». |
 
@@ -361,6 +361,7 @@ Administrer › **Réglages**.
 | Mémoriser le mot de passe | non | Autorise Portunia à garder le mot de passe de la Gate ; le code reste demandé. |
 | Relire ses propres sessions | non | Ajoute « Mes sessions » au menu de la Gate pour chaque compte, sans pouvoir révéler les saisies masquées. |
 | Commandes sensibles | `rm -rf`, `rm -fr`, `mkfs`, `dd if=`, `chmod -R 777`, `shutdown`, `reboot`, `iptables -F`, `userdel`, `DROP TABLE`, `DROP DATABASE` | Une par ligne ; marquées en rouge sur la barre de temps du lecteur. Ajoutez celles de votre métier (`systemctl stop`, `kubectl delete`…). |
+| Copies des fichiers copiés (Gate 0.28) | 0 Mo | Taille gardée par session des fichiers copiés en Bureau à distance, à côté de l'enregistrement (0 à 10240 Mo ; 0 : seuls nom, taille et SHA-256 sont notés). Dans Portunia 0.69 : Réglages › Copie de fichiers en Bureau à distance ; en ligne de commande : `setting file_copies_mb`. |
 
 En ligne de commande : `sudo portunia-gate setting auth_policy "password+totp,key+totp"`, `setting banniere "…"`, `setting nom "…"`, `setting langue fr` (sans valeur : affiche la valeur actuelle).
 
@@ -452,7 +453,7 @@ Journal : `assistance.ouverte`, `assistance.fermee`, `assistance.reglage`, `assi
 
 ## 12\. Audit et relecture des sessions
 
-Menu **⋯** de la Gate › **Audit** › **Sessions** (administrateurs et auditeurs). Filtres par compte, serveur, période (7 jours, 30 jours, 12 mois), case « Avec frappe ». La recherche porte sur la frappe et le texte affiché de toutes les sessions : la colonne « Trouvé » donne le moment et l'extrait, un clic ouvre la relecture à cet endroit.
+Menu **⋯** de la Gate › **Audit** › **Sessions** (administrateurs et auditeurs). Filtres par compte, serveur, période (7 jours, 30 jours, 12 mois), cases « Avec frappe » et « Avec copie de fichiers » (Portunia 0.69 ; la session porte alors le nombre de fichiers, et le lecteur les place sur la barre de temps). La recherche porte sur la frappe et le texte affiché de toutes les sessions : la colonne « Trouvé » donne le moment et l'extrait, un clic ouvre la relecture à cet endroit.
 
 ### Le lecteur
 
