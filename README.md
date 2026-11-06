@@ -21,7 +21,8 @@ Users go through the Gate to reach servers: the Gate checks who they are, decide
 | **Web portal** | For people without Portunia at hand: sign-in, terminal and Remote Desktop in the browser. Published through a Cloudflare tunnel run by the Gate, a dedicated relay in a DMZ, a proxy or WAF, or directly over HTTPS, with your PKI certificate or Let's Encrypt. Everything is set in Portunia. |
 | **Remote assistance** | Help someone on their Windows PC: they run a small program, read you a code, and choose view only or view and control. End-to-end encrypted, relayed by the Gate. |
 | **Portunia** | The Gate appears in Portunia's sidebar; its servers open with one click; administrators and auditors manage everything from Portunia Teams. |
-| **Other clients** | Any SSH client: OpenSSH, PuTTY, MobaXterm, WinSCP (SFTP). |
+| **Native Remote Desktop** | Off by default (port 3390). Once enabled, Windows servers also open in mstsc, Windows App (Mac) or Remmina: from Portunia with a single-use `.rdp` file, or without Portunia with `login%server` as the user name (plus `%code` when a code is required) and the RDP password created in the portal. Vault and Recorded sessions are recorded and signed like the others; Jump uses Portunia's file. |
+| **Other clients** | Any SSH client: OpenSSH, PuTTY, MobaXterm, WinSCP (SFTP). Any RDP client once native Remote Desktop is on: mstsc, Windows App, Remmina, FreeRDP. |
 
 ## Documentation
 

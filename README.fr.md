@@ -21,7 +21,8 @@ Les utilisateurs passent par la Gate pour atteindre les serveurs : la Gate véri
 | **Portail web** | Pour qui n'a pas Portunia sous la main : connexion, terminal et Bureau à distance dans le navigateur. Publié par un tunnel Cloudflare lancé par la Gate, un relais dédié en DMZ, un proxy ou WAF, ou directement en HTTPS, avec le certificat de votre PKI ou Let's Encrypt. Tout se règle dans Portunia. |
 | **Assistance à distance** | Dépanner quelqu'un sur son PC Windows : il lance un petit programme, vous lit un code et choisit voir seulement ou voir et contrôler. Chiffré de bout en bout, relayé par la Gate. |
 | **Portunia** | La Gate apparaît dans la barre latérale de Portunia ; ses serveurs s'ouvrent d'un clic ; administrateurs et auditeurs gèrent tout depuis Portunia Équipes. |
-| **Autres clients** | Tout client SSH : OpenSSH, PuTTY, MobaXterm, WinSCP (SFTP). |
+| **Bureau à distance natif** | Coupé par défaut (port 3390). Une fois activé, les serveurs Windows s'ouvrent aussi dans mstsc, Windows App (Mac) ou Remmina : depuis Portunia par un fichier `.rdp` à usage unique, ou sans Portunia avec `compte%serveur` comme nom d'utilisateur (plus `%code` quand un code est demandé) et le mot de passe RDP créé dans le portail. Les sessions en coffre et en enregistré sont enregistrées et signées comme les autres ; le rebond passe par le fichier de Portunia. |
+| **Autres clients** | Tout client SSH : OpenSSH, PuTTY, MobaXterm, WinSCP (SFTP). Tout client RDP une fois le Bureau à distance natif activé : mstsc, Windows App, Remmina, FreeRDP. |
 
 ## Documentation
 
