@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.38.0 · Portunia 0.77.0 · Mise à jour : 6 novembre 2026*
+*Portunia Gate 0.41.0 · Portunia 0.79.0 · Mise à jour : 6 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -424,6 +424,34 @@ Interfaces web (Gate 0.30) : bouton du serveur, puis l'application dans un nouve
 6.  **Dans Portunia** : Administrer › **Portail web** : groupe, durées, copier-coller, Turnstile, Enregistrer, puis l'interrupteur. En ligne de commande : `sudo portunia-gate portal set --url https://acces.votre-domaine.fr` (et `--group`, `--duration`, `--idle`, `--clipboard`, `--code`), puis `sudo portunia-gate portal on`.
 7.  **Créer le groupe** (« Accès web » par défaut) et y ajouter les comptes concernés.
 
+<a id="deux-entrees"></a>
+
+### Entrée interne et entrée externe (Gate 0.40)
+
+Le portail peut être ouvert **en même temps** sur le réseau de l'entreprise (**entrée interne**) et depuis Internet (**entrée externe** : Cloudflare, HTTPS direct, proxy ou WAF, relais dédié). Les postes internes joignent la Gate directement par l'écoute HTTPS, sans passer par Internet ; les autres passent par l'entrée externe.
+
+Administrer › **Portail web** : choisir l'**entrée externe** (« Aucune » pour un portail seulement interne), puis cocher **Ouvrir aussi le portail sur le réseau de l'entreprise** et régler :
+
+-   **Réseaux internes** : vides, les réseaux privés (10/8, 172.16/12, 192.168/16) ; sinon la liste, ex. `10.0.0.0/8, 192.168.10.0/24`.
+-   **Adresse interne** : celle que tapent les postes, ex. `https://gate.lan:8446` ; vérifiée comme l'adresse publique. Vide : tout nom de la Gate est accepté.
+-   **Code d'authentification** sur l'entrée interne : exigé ou non, indépendamment de l'entrée externe (les combinaisons propres d'un compte s'appliquent toujours).
+-   L'**écoute HTTPS** et le **certificat du portail** (plus bas) servent à l'entrée interne ; avec Cloudflare, le tunnel continue de servir l'entrée externe.
+
+La Gate décide de l'entrée d'après la connexion, jamais d'après ce qu'envoie le navigateur : les proxys de confiance et les adresses de Cloudflare comptent toujours comme l'entrée externe, même avec une adresse privée. **Turnstile** ne s'applique qu'à l'entrée externe. Chaque connexion au portail note son entrée au journal (`portail.connexion`, champ `entree`). En ligne de commande : `sudo portunia-gate portal expose --internal on --internal-networks 10.0.0.0/8` et `sudo portunia-gate portal set --internal-url https://gate.lan:8446 --internal-code off`.
+
+<a id="cloudflare-tcp"></a>
+
+### Portunia et mstsc de l'extérieur, par Cloudflare (Gate 0.41)
+
+Le tunnel ne transporte que du HTTPS : le portail passe, mais pas Portunia (API sur 8443, SSH sur 2222) ni mstsc (RDP natif sur 3390). Cloudflare refuse en effet les requêtes d'une passerelle RD Gateway. La Gate publie donc ces trois services sous trois **noms d'hôte TCP** ; sur le poste, `cloudflared` les ramène sur un port local. Portunia le télécharge et le lance lui-même quand la Gate ne répond pas directement. Le chiffrement reste de bout en bout : Cloudflare ne voit que des octets chiffrés, et Portunia vérifie toujours les empreintes de la Gate.
+
+1.  Administrer › **Portail web** › mode **Cloudflare**, tunnel géré par la Gate (jeton enregistré).
+2.  Section **Accès de l'extérieur avec Portunia et les clients RDP** : un nom d'hôte pour l'API, le SSH et le RDP natif (ex. `gate-api`, `gate-ssh`, `gate-rdp` de votre domaine).
+3.  **Publier dans Cloudflare** avec un jeton d'API Cloudflare (*Account › Cloudflare Tunnel › Edit* et *Zone › DNS › Edit*), utilisé une fois et jamais gardé : la Gate ajoute à son tunnel une route TCP par nom, vers ses propres ports (jamais vers vos serveurs), et crée les enregistrements DNS. Un enregistrement existant n'est jamais écrasé. À la main : *Routes › Add route › Published application*, type TCP, `localhost:8443`, `localhost:2222`, `localhost:3390`, puis **Enregistrer les noms seulement**.
+4.  Le RDP natif doit être ouvert (§7) pour mstsc.
+
+Conseillé : une application **Cloudflare Access** sur ces noms, pour exiger un compte de l'entreprise avant même la Gate. Les connexions arrivent alors à la Gate depuis `127.0.0.1` (cloudflared) : le journal montre cette adresse, et les limites d'essais par adresse portent sur l'ensemble des accès extérieurs, les limites par compte restant entières. En ligne de commande : `sudo portunia-gate portal tcp --api … --ssh … --rdp … --publish`.
+
 ### L'écran Portail web
 
 | Élément | Détail |
@@ -611,9 +639,19 @@ sudo ./installer.sh mise-a-jour          # Docker, depuis le dossier du dépôt
 
 Le portail web charge de lui-même ses nouvelles pages après une mise à jour. Si Portunia annonce qu'une fonction demande une version plus récente de la Gate (portail : 0.7, assistance : 0.11), c'est cette commande qu'il faut lancer.
 
+### Depuis Portunia (Gate 0.39, paquet Debian)
+
+Menu **⋯** de la Gate › **État de la Gate** : quand une version plus récente est publiée, **Mettre à jour…** propose de la lancer tout de suite ou à une heure choisie (cette nuit à 3 h par défaut), en prévenant les utilisateurs connectés 5 minutes avant. La mise à jour en un clic fait partie de Portunia Pro ; sur le serveur, `sudo portunia-gate update apply` fait la même chose (`--at 03:00 --notice` pour la programmer).
+
+Un service système à part, lancé en root, sauvegarde la base, télécharge et vérifie le nouveau paquet et celui installé, installe, puis attend que la nouvelle version démarre. Si elle ne démarre pas en 3 minutes, il **revient en arrière tout seul** : ancien paquet réinstallé, base restaurée. L'avancement s'affiche dans Portunia (et `sudo portunia-gate update status`) ; les administrateurs sont prévenus du résultat par courriel, Teams ou webhook. En Docker, la page affiche la commande à lancer sur le serveur.
+
 <a id="surveiller"></a>
 
 ## 16\. Surveiller le service
+
+**État de la Gate** (Gate 0.39, Portunia 0.78) : menu **⋯** de la Gate › **État de la Gate**, ou section *État* de l'administration ; `sudo portunia-gate status` sur le serveur. Santé générale, durée de service, processeur, mémoire, disque et réseau avec les courbes des dernières 24 heures, services (base, certificat HTTPS, relais, heure, notifications, durcissement), stockage (enregistrements, rythme, « disque plein dans N jours »), activité et intégrité du journal signé. La pastille de la Gate dans la barre latérale passe à l'orange ou au rouge quand quelque chose demande votre attention. Au-delà de 85 % de disque occupé, les administrateurs sont prévenus.
+
+**Conservation des enregistrements** : *Garder les enregistrements* sur la page État (ou Réglages, ou `sudo portunia-gate setting recording_days 180`). Au-delà, les enregistrements des sessions terminées sont supprimés chaque heure ; les sessions restent dans la liste, et la suppression est notée au journal. Par défaut, ils sont gardés toujours.
 
 | Besoin | Paquet Debian | Docker |
 | --- | --- | --- |
@@ -804,8 +842,10 @@ sudo portunia-gate portal show                                 # état, réglage
 sudo portunia-gate portal test                                 # la Gate répond-elle à l'adresse publique ?
 sudo portunia-gate portal acme --domains acces.acme.fr --email it@acme.fr --accept-terms   # Let's Encrypt ; --renew, --off, sans option : état
 sudo portunia-gate portal show                                 # mode, écoute HTTPS, certificat, tunnel
-sudo portunia-gate portal expose cloudflare                    # modes : cloudflare, internal, direct, proxy, relay
-sudo portunia-gate portal expose internal --networks 10.0.0.0/8,192.168.0.0/16
+sudo portunia-gate portal expose cloudflare                    # entrée externe : cloudflare, direct, proxy, relay
+sudo portunia-gate portal expose --internal on --internal-networks 10.0.0.0/8,192.168.0.0/16   # entrée interne en plus
+sudo portunia-gate portal set --internal-url https://gate.lan:8446 --internal-code off         # adresse interne, code selon le compte
+sudo portunia-gate portal expose internal                      # pas d'entrée externe : interne seulement
 sudo portunia-gate portal expose proxy --trusted 10.0.5.10,10.0.5.11 --header X-Forwarded-For
 sudo portunia-gate portal https 8446                           # écoute HTTPS ; sans valeur, l'affiche ; --off la ferme
 sudo portunia-gate portal cert                                 # affiche le certificat du portail
