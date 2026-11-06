@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.32.0 · Portunia 0.72.0 · Mise à jour : 5 novembre 2026*
+*Portunia Gate 0.33.0 · Portunia 0.73.0 · Mise à jour : 5 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -240,6 +240,7 @@ Administrer › **Serveurs et coffre** › **Ajouter un serveur**. Chaque modifi
 | Protocole | SSH, Bureau à distance (RDP), ou Interface web (HTTPS ou HTTP, Gate 0.30). Le port passe à 22, 3389, 443 ou 80 tant que vous ne l'avez pas changé. |
 | Nom | Sans espace (`web-01`) : c'est aussi le nom à taper avec un client SSH (`julien%web-01@gate`). |
 | Dossier | Range les serveurs sous la Gate dans Portunia (Production, Recette, Réseau…). |
+| Description | Gate 0.33 : texte de la vignette du serveur dans le portail web et de son info-bulle dans Portunia (200 caractères au plus ; trouvé aussi par la recherche). Vide : texte automatique (par exemple « Interface web dans un onglet, par la Gate »). |
 | Adresse, Port | Telles que la Gate les joint (adresse interne). Changer l'adresse d'un serveur qui a un secret dans le coffre oblige à **ressaisir le secret** : un jeton d'administration volé ne suffit pas à l'envoyer vers une autre machine. Le journal note l'ancienne et la nouvelle adresse. Les adresses de métadonnées des hébergeurs cloud (`169.254.169.254`…) sont refusées. |
 | Mode | Rebond, enregistré ou coffre (ci-dessous). |
 | Compte sur le serveur | Obligatoire en coffre. En Bureau à distance : `DOMAINE\compte`, proposé à l'ouverture. |

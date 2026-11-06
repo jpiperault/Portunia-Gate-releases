@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.32.0 · Portunia 0.72.0 · Updated: 5 November 2026*
+*Portunia Gate 0.33.0 · Portunia 0.73.0 · Updated: 5 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -240,6 +240,7 @@ Administer › **Servers and vault** › **Add a server**. Every change is logge
 | Protocol | SSH, Remote Desktop (RDP), or Web interface (HTTPS or HTTP, Gate 0.30). The port switches to 22, 3389, 443 or 80 as long as you have not changed it. |
 | Name | No spaces (`web-01`): it is also the name to type with an SSH client (`julien%web-01@gate`). |
 | Folder | Sorts the servers under the Gate in Portunia (Production, Staging, Network…). |
+| Description | Gate 0.33: text of the server's tile in the web portal and of its tooltip in Portunia (200 characters at most; also found by the search). Empty: automatic text (for example « Web interface in a tab, through the Gate »). |
 | Address, Port | As the Gate reaches them (internal address). Changing the address of a server that has a secret in the vault requires **typing the secret again**: a stolen administration token is not enough to send it to another machine. The log records the old and new address. Cloud providers' metadata addresses (`169.254.169.254`…) are refused. |
 | Mode | Jump, recorded or vault (below). |
 | Account on the server | Required in vault mode. For Remote Desktop: `DOMAIN\account`, offered at opening. |
