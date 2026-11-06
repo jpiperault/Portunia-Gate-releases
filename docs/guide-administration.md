@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.36.0 · Portunia 0.75.0 · Mise à jour : 6 novembre 2026*
+*Portunia Gate 0.37.0 · Portunia 0.76.0 · Mise à jour : 6 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -494,6 +494,8 @@ Menu **⋯** de la Gate › **Audit** › **Sessions** (administrateurs et audit
 | Repères | Chaque commande ; en orange sudo, Ctrl+C et saisies masquées ; en rouge les commandes sensibles ; en bas les erreurs affichées. |
 | Signature | Vérifiée à chaque ouverture ; un fichier modifié depuis la session est signalé en rouge. |
 | Exports | Enregistrement `.cast` (lisible par asciinema) et transcription horodatée. |
+| Vidéo | (Portunia 0.76) **Vidéo** fabrique sur ce poste un fichier MP4 (H.264, 5 images par seconde) de la session SSH ou Bureau à distance : frappe en sous-titres incrustés (et fichier `.srt` à côté), souris et clics en RDP, filigrane avec le compte qui exporte et la date. Rien n'est envoyé ailleurs ; chaque export est inscrit au journal de la Gate (`enregistrement.exporte`, Gate 0.37). |
+| Détacher | **⧉ Détacher** ouvre le lecteur dans sa propre fenêtre (deuxième écran, par exemple) ; l'onglet se ferme. |
 
 ### Saisies masquées et révélation
 
@@ -893,7 +895,7 @@ Après une modification : `sudo systemctl restart portunia-gate` (coupe les sess
 | Serveurs | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
 | Fichiers (Bureau à distance) | `fichier.copie` (sens, nom, taille, SHA-256, copie gardée) `fichier.bloque` (tentatives retenues faute d'autorisation) |
 | Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.session_ouverte` `web.session_fermee` |
-| Audit | `enregistrement.consulte` `enregistrement.revele` |
+| Audit | `enregistrement.consulte` `enregistrement.revele` `enregistrement.exporte` |
 | Portail | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
 | Assistance | `assistance.ouverte` `assistance.fermee` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |
 
