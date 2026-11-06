@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.37.0 · Portunia 0.76.0 · Mise à jour : 6 novembre 2026*
+*Portunia Gate 0.38.0 · Portunia 0.77.0 · Mise à jour : 6 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -370,9 +370,23 @@ La colonne État montre *active*, *hors plage* (en dehors des jours ou heures, e
 > [!NOTE]
 > **Un utilisateur ne voit rien ?** — Vérifiez dans l'ordre : le compte est dans le groupe (fiche du compte) ; la règle vise ce serveur ; elle est *active* maintenant (jour, heure du fuseau de la Gate, date) ; le compte n'est pas désactivé. Un refus est journalisé `acces.refuse`.
 
+### Accès sur approbation
+
+(Gate 0.38, Portunia 0.77) Cochez *Accès seulement après approbation* dans la règle et choisissez le groupe des **approbateurs** (par défaut, les administrateurs). Ses serveurs ne s'ouvrent alors qu'après l'accord d'un approbateur, pour une durée :
+
+-   L'utilisateur demande depuis Portunia (menu **⋯** de la Gate › **Approbations**) ou le portail web, avec un motif et un ticket facultatif.
+-   Les approbateurs sont prévenus par courriel, Teams ou webhook (voir *Notifications*) et par Portunia, qui affiche « Approbations (N en attente) » et une notification du système.
+-   Un approbateur accorde pour 30 minutes à 3 jours, ou refuse, avec un commentaire. Personne n'approuve sa propre demande ; une demande sans réponse expire au bout de 24 heures.
+-   L'utilisateur est prévenu 10 minutes avant la fin (terminal SSH), puis ses sessions se ferment. **Retirer** met fin à un accès accordé.
+
+Journal : `approbation.demandee`, `.accordee`, `.refusee`, `.annulee`, `.terminee`, `.sans_reponse`. En ligne de commande : `rule approval NOM on --approvers GROUPE`, `approval list`, `approval grant ID --minutes 60`.
+
 <a id="reglages"></a>
 
 ## 9\. Réglages généraux
+
+> [!NOTE]
+> **Notifications (Gate 0.38)** — Réglages › *Notifications* : serveur SMTP pour les courriels (aux approbateurs et au demandeur), webhook « Workflows » d'un canal Microsoft Teams, webhook JSON signé (HMAC-SHA256, secret affiché une fois). *Envoyer un essai* vérifie chaque canal. L'adresse e-mail de chaque compte se règle dans sa fiche. En ligne de commande : `notify set`, `notify test`, `user email`.
 
 Administrer › **Réglages**.
 

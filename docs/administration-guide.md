@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.37.0 · Portunia 0.76.0 · Updated: 6 November 2026*
+*Portunia Gate 0.38.0 · Portunia 0.77.0 · Updated: 6 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -370,9 +370,23 @@ The State column shows *active*, *outside range* (outside the days or hours, rig
 > [!NOTE]
 > **A user sees nothing?** — Check in order: the account is in the group (account form); the rule targets this server; it is *active* now (day, hour in the Gate's time zone, date); the account is not disabled. A refusal is logged as `acces.refuse`.
 
+### Access on approval
+
+(Gate 0.38, Portunia 0.77) Tick *Access only after approval* in the rule and choose the **approvers** group (administrators by default). Its servers then open only after an approver's agreement, for a duration:
+
+-   The user asks from Portunia (Gate **⋯** menu › **Approvals**) or the web portal, with a reason and an optional ticket.
+-   The approvers are told by e-mail, Teams or webhook (see *Notifications*) and by Portunia, which shows "Approvals (N waiting)" and a system notification.
+-   An approver grants for 30 minutes to 3 days, or refuses, with a comment. Nobody approves their own request; a request without an answer expires after 24 hours.
+-   The user is told 10 minutes before the end (SSH terminal), then their sessions close. **Withdraw** ends a granted access.
+
+Log: `approbation.demandee`, `.accordee`, `.refusee`, `.annulee`, `.terminee`, `.sans_reponse`. Command line: `rule approval NAME on --approvers GROUP`, `approval list`, `approval grant ID --minutes 60`.
+
 <a id="reglages"></a>
 
 ## 9\. General settings
+
+> [!NOTE]
+> **Notifications (Gate 0.38)** — Settings › *Notifications*: SMTP server for e-mails (to the approvers and the requester), « Workflows » webhook of a Microsoft Teams channel, signed JSON webhook (HMAC-SHA256, secret shown once). *Send a test* checks each channel. Each account's e-mail address is set in its form. Command line: `notify set`, `notify test`, `user email`.
 
 Administer › **Settings**.
 
