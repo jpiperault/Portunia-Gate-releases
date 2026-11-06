@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.34.0 · Portunia 0.73.0 · Updated: 5 November 2026*
+*Portunia Gate 0.36.0 · Portunia 0.75.0 · Updated: 6 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -320,6 +320,7 @@ sudo portunia-gate rdp show
 -   For administration consoles (vCenter, iDRAC, iLO, firewalls, NAS…) and internal applications. Protocol **Web interface (HTTPS)** or **(HTTP)**, the server's address and port; **recorded** or **vault** mode (no jump: the Gate reads every request). Recorded: the application's credentials are typed in its page, as usual.
 -   **Vault** (Gate 0.32): the Gate signs the user in with the vault account (**Account on the server** and its password). The password **never reaches the browser**: the Gate fills the sign-in form with the account and, in the password field, a one-time token (10 minutes, this account and this server only); when the browser sends the sign-in, whatever its format (form, JSON, HTTP header), the Gate swaps the token for the password. **Sign-in**: *Fill in the sign-in form and submit it* (default; also for applications that sign in with JavaScript, and HTTP authentication when the server asks for it), *Fill in the form only* (the user clicks), or *HTTP authentication (Basic)* on every request (equipment that shows the browser's sign-in window). Each use of the password is logged (`web.coffre`: server, path, account). Limits: an application that hashes the password in the browser, or asks for a second factor or a captcha, does not sign in by itself; a user able to manipulate the page could reuse their token in another request within 10 minutes, which `web.coffre` shows.
 -   The Gate relays every request: the rule is checked again at most every 30 seconds, each **page opened** is logged (`web.page`: server, path), and so is the opening (`web.ouvert`). The application's images, scripts and calls are not logged. Neither the image nor the keystrokes are recorded.
+-   **Web sessions** (Gate 0.35, Portunia 0.74): each account has a session per web server in *Audit › Sessions* (type `web`), opened at the first request and closed after 15 minutes without a request. **Actions** shows its signed log: pages, data sent (forms, changes), WebSockets and vault use, with path and status, filterable and searchable; never what is typed. Log: `web.session_ouverte`, `web.session_fermee`.
 -   The certificate of an HTTPS server is checked by its fingerprint, kept on the first connection, as for Remote Desktop.
 -   **From Portunia**: the server opens in a dedicated window, through a local relay to the Gate; the web session lasts 8 hours.
 -   **From the web portal**: in a tab, at `/web/<name>/`. A browser has **one web interface at a time**: opening a second one replaces the first. The application shares the portal's address: only publish trusted applications on the portal.
@@ -478,6 +479,10 @@ Log: `assistance.ouverte`, `assistance.fermee`, `assistance.reglage`, `assistanc
 ## 12\. Audit and session replay
 
 The Gate's **⋯** menu › **Audit** › **Sessions** (administrators and auditors). Filters by account, server, period (7 days, 30 days, 12 months), "With keystrokes" and "With file copies" boxes (Portunia 0.69; the session then shows how many files, and the player places them on the timeline). The search covers the keystrokes and the displayed text of all sessions: the "Found" column gives the moment and the excerpt; a click opens the replay at that point.
+
+### Live
+
+**Audit** › **Live** (Gate 0.36, Portunia 0.75) lists the sessions open right now, refreshed every 10 seconds. **Follow** opens the player at the end of the session (● LIVE): it keeps growing as the session goes on, picture, keystrokes if the rule records them, clicks and web actions included. **Cut** closes the session at once; an administrator can tick *Also disable the account*. Following (`session.suivie`) and cutting (`session.coupee_par`) are logged. With *Settings › Tell the user when their session is followed live* (on by default, `setting live_notice`), the SSH user sees it in their terminal; in Remote Desktop and web sessions they are not told. There is no taking over the keyboard. Command line: `sudo portunia-gate sessions cut ID` (`--disable`: also disables the account).
 
 ### The player
 
@@ -887,7 +892,7 @@ After a change: `sudo systemctl restart portunia-gate` (cuts open sessions).
 | Groups, rules, settings | `groupe.cree` `groupe.supprime` `groupe.membre_ajoute` `regle.creee` `regle.modifiee` `regle.supprimee` `reglage.modifie` |
 | Servers | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
 | Files (Remote Desktop) | `fichier.copie` (direction, name, size, SHA-256, copy kept) `fichier.bloque` (attempts held back for lack of permission) |
-| Sessions | `session.ouverte` `session.fermee` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` |
+| Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.session_ouverte` `web.session_fermee` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` |
 | Portal | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
 | Assistance | `assistance.ouverte` `assistance.fermee` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |

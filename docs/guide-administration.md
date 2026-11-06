@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.34.0 · Portunia 0.73.0 · Mise à jour : 5 novembre 2026*
+*Portunia Gate 0.36.0 · Portunia 0.75.0 · Mise à jour : 6 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -320,6 +320,7 @@ sudo portunia-gate rdp show
 -   Pour les consoles d'administration (vCenter, iDRAC, iLO, pare-feu, NAS…) et les applications internes. Protocole **Interface web (HTTPS)** ou **(HTTP)**, adresse et port du serveur ; mode **enregistré** ou **coffre** (pas de rebond : la Gate lit chaque requête). Enregistré : les identifiants de l'application se tapent dans sa page, comme d'habitude.
 -   **Coffre** (Gate 0.32) : la Gate connecte l'utilisateur avec le compte du coffre (**Compte sur le serveur** et son mot de passe). Le mot de passe **n'arrive jamais dans le navigateur** : la Gate remplit le formulaire de connexion avec le compte et, dans le champ mot de passe, un jeton à usage unique (10 minutes, pour ce compte et ce serveur seulement) ; quand le navigateur envoie la connexion, quel qu'en soit le format (formulaire, JSON, en-tête HTTP), la Gate remplace le jeton par le mot de passe. **Connexion** : *Remplir le formulaire de connexion et le valider* (par défaut ; aussi pour les applications qui se connectent en JavaScript, et authentification HTTP si le serveur la demande), *Remplir le formulaire seulement* (l'utilisateur clique), ou *Authentification HTTP (Basic)* à chaque requête (équipements qui affichent la fenêtre de connexion du navigateur). Chaque usage du mot de passe est noté au journal (`web.coffre` : serveur, chemin, compte). Limites : une application qui chiffre le mot de passe dans le navigateur, ou demande un second facteur ou un captcha, ne se connecte pas toute seule ; un utilisateur capable de manipuler la page pourrait réutiliser son jeton dans une autre requête dans les 10 minutes, ce que `web.coffre` montre.
 -   La Gate relaie chaque requête : la règle est revérifiée au plus toutes les 30 secondes, chaque **page ouverte** est notée au journal (`web.page` : serveur, chemin), l'ouverture aussi (`web.ouvert`). Les images, scripts et appels de l'application ne sont pas notés. Ni l'image ni la frappe ne sont enregistrées.
+-   **Sessions web** (Gate 0.35, Portunia 0.74) : chaque compte a une session par serveur web dans *Audit › Sessions* (type `web`), ouverte à la première requête et fermée après 15 minutes sans requête. **Actions** affiche son journal signé : pages, envois (formulaires, modifications), WebSocket et usages du coffre, avec chemin et statut, à filtrer et à chercher ; jamais ce qui est saisi. Journal : `web.session_ouverte`, `web.session_fermee`.
 -   Le certificat d'un serveur HTTPS est vérifié par son empreinte, gardée à la première connexion, comme pour le Bureau à distance.
 -   **Depuis Portunia** : le serveur s'ouvre dans une fenêtre dédiée, à travers un relais local vers la Gate ; la session web dure 8 heures.
 -   **Depuis le portail web** : dans un onglet, à l'adresse `/web/<nom>/`. Un navigateur a **une interface web à la fois** : en ouvrir une seconde remplace la première. L'application partage l'adresse du portail : ne publiez sur le portail que des applications de confiance.
@@ -478,6 +479,10 @@ Journal : `assistance.ouverte`, `assistance.fermee`, `assistance.reglage`, `assi
 ## 12\. Audit et relecture des sessions
 
 Menu **⋯** de la Gate › **Audit** › **Sessions** (administrateurs et auditeurs). Filtres par compte, serveur, période (7 jours, 30 jours, 12 mois), cases « Avec frappe » et « Avec copie de fichiers » (Portunia 0.69 ; la session porte alors le nombre de fichiers, et le lecteur les place sur la barre de temps). La recherche porte sur la frappe et le texte affiché de toutes les sessions : la colonne « Trouvé » donne le moment et l'extrait, un clic ouvre la relecture à cet endroit.
+
+### En direct
+
+**Audit** › **En direct** (Gate 0.36, Portunia 0.75) liste les sessions ouvertes en ce moment, mises à jour toutes les 10 secondes. **Suivre** ouvre le lecteur à la fin de la session (● EN DIRECT) : il s'allonge au fil de la session, image, frappe si la règle l'enregistre, clics et actions web compris. **Couper** ferme la session tout de suite ; un administrateur peut cocher *Désactiver aussi le compte*. Le suivi (`session.suivie`) et la coupure (`session.coupee_par`) sont notés au journal. Avec *Réglages › Prévenir l'utilisateur quand sa session est suivie en direct* (actif par défaut, `setting live_notice`), l'utilisateur SSH le voit dans son terminal ; en Bureau à distance et en web, il n'est pas prévenu. Pas de prise en main du clavier. En ligne de commande : `sudo portunia-gate sessions cut ID` (`--disable` : désactive aussi le compte).
 
 ### Le lecteur
 
@@ -887,7 +892,7 @@ Après une modification : `sudo systemctl restart portunia-gate` (coupe les sess
 | Groupes, règles, réglages | `groupe.cree` `groupe.supprime` `groupe.membre_ajoute` `regle.creee` `regle.modifiee` `regle.supprimee` `reglage.modifie` |
 | Serveurs | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
 | Fichiers (Bureau à distance) | `fichier.copie` (sens, nom, taille, SHA-256, copie gardée) `fichier.bloque` (tentatives retenues faute d'autorisation) |
-| Sessions | `session.ouverte` `session.fermee` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` |
+| Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.session_ouverte` `web.session_fermee` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` |
 | Portail | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
 | Assistance | `assistance.ouverte` `assistance.fermee` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |
