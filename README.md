@@ -65,6 +65,8 @@ The vault key encrypts server passwords and TOTP secrets: without it, a restore 
 | `sudo bash installer.sh` | Menu: information, update, backup administrator, web portal, hardening |
 | `sudo bash installer.sh info` | Address and fingerprint to give to users |
 | `sudo bash installer.sh update` | Installs the latest version and restarts (**open sessions are cut**) |
+| `sudo portunia-gate status` | Gate status: health, hardware, services, storage, activity (also in Portunia › Gate status, since 0.39) |
+| `sudo portunia-gate update apply` | Updates from the server (since 0.39): database backup, installation, automatic rollback if the new version does not start; `--at 03:00 --notice` to schedule it. From Portunia: Gate status › Update… (Portunia Pro) |
 | `sudo bash installer.sh admin julien` | Creates a backup administrator with a temporary password |
 | `sudo bash installer.sh harden` | Hardens a server dedicated to the Gate (`plan` shows what would change, `undo` reverts) |
 | `sudo bash installer.sh relay CODE` | Makes this machine a dedicated web portal relay (code given by the Gate) |

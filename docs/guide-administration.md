@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.41.0 · Portunia 0.79.0 · Mise à jour : 6 novembre 2026*
+*Portunia Gate 0.41.1 · Portunia 0.79.0 · Mise à jour : 6 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 

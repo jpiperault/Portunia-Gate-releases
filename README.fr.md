@@ -65,6 +65,8 @@ La clé du coffre chiffre les mots de passe des serveurs et les codes TOTP : san
 | `sudo bash installer.sh` | Menu : informations, mise à jour, administrateur de secours, portail web, durcissement |
 | `sudo bash installer.sh info` | Adresse et empreinte à donner aux utilisateurs |
 | `sudo bash installer.sh mise-a-jour` | Installe la dernière version et redémarre (**les sessions ouvertes sont coupées**) |
+| `sudo portunia-gate status` | État de la Gate : santé, matériel, services, stockage, activité (aussi dans Portunia › État de la Gate, depuis la 0.39) |
+| `sudo portunia-gate update apply` | Met à jour depuis le serveur (depuis la 0.39) : sauvegarde de la base, installation, retour en arrière automatique si la nouvelle version ne démarre pas ; `--at 03:00 --notice` pour la programmer. Depuis Portunia : État de la Gate › Mettre à jour… (Portunia Pro) |
 | `sudo bash installer.sh admin julien` | Crée un administrateur de secours avec un mot de passe provisoire |
 | `sudo bash installer.sh durcir` | Durcit un serveur dédié à la Gate (`simulation` montre ce qui changerait, `annuler` revient en arrière) |
 | `sudo bash installer.sh relais CODE` | Fait de cette machine un relais dédié du portail web (code donné par la Gate) |
