@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.33.0 · Portunia 0.73.0 · Updated: 5 November 2026*
+*Portunia Gate 0.34.0 · Portunia 0.73.0 · Updated: 5 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -305,6 +305,7 @@ sudo portunia-gate target list        # protocol, mode, fingerprint ("to remembe
 -   **Recorded**: the same, with the Windows account the user types in Portunia when preparing the file. The Gate keeps it **in memory** until the client connects (at most the file's validity), never on disk, then forgets it. Without an account, only for a server that accepts TLS without NLA: the user then signs in on the Windows sign-in screen.
 -   **Certificate**: in Vault and Recorded, the client sees the Gate's API certificate; without a company certificate, mstsc warns once: compare the fingerprint shown in Administer › Native RDP (or `sudo portunia-gate rdp show`). In Jump, it sees the Windows server's own.
 -   **Log**: `rdp_natif.fichier` (file prepared, with or without an account), then the usual session events, the address followed by "(natif)"; refusals: `acces.refuse` with "type": "rdp natif" and the reason. A file is single-use: the client's automatic reconnection after a network cut is refused.
+-   **Without Portunia** (Gate 0.34): computer = the Gate's address and this port, user = `login%server` (`login%server%123456` with the code when the account's policy asks for one), password = the account's **RDP password**. The Gate checks them through NLA, then opens the server as in Vault or Recorded mode (Jump: Portunia's file only). The user creates their RDP password in the web portal (*Connect with mstsc or Windows App*, with a .rdp shortcut per server); an administrator with `sudo portunia-gate user rdp-password LOGIN` (`--remove` takes it away). It is separate from the account password, sealed by the Gate and shown only once. A Recorded server must accept a connection without NLA (the user signs in to Windows in its sign-in screen). Log: `rdp_natif.mot_de_passe`, and refusals with their reason (unknown server, missing code, too many attempts…).
 
 ```
 sudo portunia-gate rdp set --port 3390 --modes rebond,coffre,enregistre --ticket-seconds 120

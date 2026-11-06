@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.33.0 · Portunia 0.73.0 · Mise à jour : 5 novembre 2026*
+*Portunia Gate 0.34.0 · Portunia 0.73.0 · Mise à jour : 5 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -305,6 +305,7 @@ sudo portunia-gate target list        # protocole, mode, empreinte (« à mémor
 -   **Enregistré** : pareil, avec le compte Windows que l'utilisateur tape dans Portunia en préparant le fichier. La Gate le garde **en mémoire** jusqu'à la connexion du client (au plus la validité du fichier), jamais sur disque, puis l'oublie. Sans compte, seulement pour un serveur qui accepte TLS sans NLA : l'utilisateur se connecte alors dans l'écran de connexion de Windows.
 -   **Certificat** : en coffre et enregistré, le client voit le certificat de l'API de la Gate ; sans certificat d'entreprise, mstsc avertit une fois : comparez l'empreinte affichée dans Administrer › RDP natif (ou `sudo portunia-gate rdp show`). En rebond, il voit celui du serveur Windows.
 -   **Journal** : `rdp_natif.fichier` (fichier préparé, avec ou sans compte), puis les événements habituels de la session, l'adresse suivie de « (natif) » ; refus : `acces.refuse` avec « type » : « rdp natif » et la raison. Un fichier ne sert qu'une fois : la reconnexion automatique du client après une coupure réseau est refusée.
+-   **Sans Portunia** (Gate 0.34) : ordinateur = adresse de la Gate et ce port, utilisateur = `compte%serveur` (`compte%serveur%123456` avec le code quand la politique du compte en demande un), mot de passe = **mot de passe RDP** du compte. La Gate les vérifie par NLA, puis ouvre le serveur comme en coffre ou en enregistré (rebond : fichier de Portunia seulement). L'utilisateur crée son mot de passe RDP dans le portail web (*Se connecter avec mstsc ou Windows App*, avec un raccourci .rdp par serveur) ; un administrateur avec `sudo portunia-gate user rdp-password COMPTE` (`--remove` le retire). Il est distinct du mot de passe du compte, scellé par la Gate et affiché une seule fois. Un serveur en enregistré doit accepter une connexion sans NLA (l'utilisateur ouvre sa session dans l'écran de connexion de Windows). Journal : `rdp_natif.mot_de_passe`, et les refus avec leur raison (serveur inconnu, code manquant, trop d'essais…).
 
 ```
 sudo portunia-gate rdp set --port 3390 --modes rebond,coffre,enregistre --ticket-seconds 120
