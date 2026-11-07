@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.44.0 · Portunia 0.82.0 · Updated: 7 November 2026*
+*Portunia Gate 0.44.1 · Portunia 0.82.1 · Updated: 7 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -745,7 +745,7 @@ A session closes in less than 30 seconds if the account is disabled, or if the r
 | Cloudflare 502 page | Wrong **Service URL** in the route (tunnel's Routes tab): `http://localhost:8445`. The **Test the public address** button reports it. |
 | "Portal closed" | Switch off in Administer › Web portal. |
 | Sign-in refused on the portal although Portunia works | Account outside the allowed group, first sign-in not yet done in Portunia, or public address mistyped. |
-| Portunia Assistance "missing" | The Gate could not download the program (outbound access to github.com); it retries every day, and each time the relay is enabled. |
+| Portunia Assistance "missing" | The Gate could not download the program (outbound access to github.com); it retries every hour, and each time the relay is enabled. |
 | The helper does not see "Remote assistance" | Portunia Gate and Assistance extensions to enable in their Portunia; account member of the helpers' group. |
 
 To report a problem: version (`sudo portunia-gate info`), the last 100 lines of the service and the log events around the time of the problem.
