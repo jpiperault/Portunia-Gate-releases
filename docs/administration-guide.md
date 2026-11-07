@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.43.0 · Portunia 0.81.0 · Updated: 7 November 2026*
+*Portunia Gate 0.44.0 · Portunia 0.82.0 · Updated: 7 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -514,7 +514,7 @@ A helper takes control of a relative's or a customer's PC. The person goes to `h
 -   A frame and a **Stop** bar stay on the screen; pressing Esc three times also stops.
 -   A wrong code ends the attempt; the person gets a new one. A slot waits 30 minutes at most.
 
-Log: `assistance.ouverte`, `assistance.fermee`, `assistance.coupure`, `assistance.reprise`, `assistance.reglage`, `assistance.place_inconnue`, `assistance.programme`. The same address cannot open more than 20 connections in 10 minutes.
+Log: `assistance.ouverte`, `assistance.fermee`, `assistance.coupure`, `assistance.reprise`, `assistance.fichier`, `assistance.reglage`, `assistance.place_inconnue`, `assistance.programme`. The same address cannot open more than 20 connections in 10 minutes.
 
 <a id="audit"></a>
 
@@ -959,7 +959,7 @@ After a change: `sudo systemctl restart portunia-gate` (cuts open sessions).
 | Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.session_ouverte` `web.session_fermee` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` `enregistrement.exporte` |
 | Portal | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
-| Assistance | `assistance.ouverte` `assistance.fermee` `assistance.coupure` `assistance.reprise` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |
+| Assistance | `assistance.ouverte` `assistance.fermee` `assistance.coupure` `assistance.reprise` `assistance.fichier` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |
 
 > [!NOTE]
 > **To watch** — Bursts of `auth.echec` (brute-force attack), `cible.empreinte_differente` (server replaced or spoofed), `enregistrement.revele` (revealed input), `compte.*` and `regle.*` outside planned changes. Event names stay in French whatever the language of the Gate, so that filters and exports stay stable.
