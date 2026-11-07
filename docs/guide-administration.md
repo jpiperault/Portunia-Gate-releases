@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.41.1 · Portunia 0.79.0 · Mise à jour : 6 novembre 2026*
+*Portunia Gate 0.42.0 · Portunia 0.80.0 · Mise à jour : 7 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -560,7 +560,7 @@ Les enregistrements sont rangés dans `/var/lib/portunia-gate/enregistrements/AA
 
 Audit › **Journal** : tous les événements (connexions, échecs, sessions, administration, relectures), filtrables par compte, serveur ou événement, avec export CSV. Chaque événement contient l'empreinte du précédent : une ligne supprimée ou modifiée casse la chaîne.
 
-**Vérifier la chaîne** : bouton dans Portunia, ou `sudo portunia-gate audit --verify` qui affiche le premier événement manquant ou modifié. À faire régulièrement et avant toute remise de preuves.
+**Vérifier la chaîne** : bouton dans Portunia, ou `sudo portunia-gate audit --verify` qui affiche le premier événement manquant ou modifié. À faire régulièrement et avant toute remise de preuves. Après une purge du journal (§16), la vérification part du premier événement gardé.
 
 ```
 sudo portunia-gate audit --last 100          # derniers événements
@@ -637,6 +637,8 @@ sudo ./installer.sh mise-a-jour          # Docker, depuis le dossier du dépôt
 4.  Lancer la mise à jour : en paquet, téléchargement et vérification de l'empreinte puis installation ; en Docker, `git pull` puis recompilation. Le schéma de la base est mis à jour au démarrage.
 5.  Contrôler : `sudo portunia-gate info` (version), `sudo systemctl status portunia-gate`, une connexion depuis Portunia.
 
+**Gate qui ne démarre plus** : depuis la 0.42, `installer.sh mise-a-jour` lit la version installée dans le paquet et non auprès de la Gate ; il remplace donc aussi une version qui ne démarre plus. Pour réinstaller un paquet déjà téléchargé : `sudo bash installer.sh --paquet portunia-gate_amd64.deb mise-a-jour`.
+
 Le portail web charge de lui-même ses nouvelles pages après une mise à jour. Si Portunia annonce qu'une fonction demande une version plus récente de la Gate (portail : 0.7, assistance : 0.11), c'est cette commande qu'il faut lancer.
 
 ### Depuis Portunia (Gate 0.39, paquet Debian)
@@ -652,6 +654,10 @@ Un service système à part, lancé en root, sauvegarde la base, télécharge et
 **État de la Gate** (Gate 0.39, Portunia 0.78) : menu **⋯** de la Gate › **État de la Gate**, ou section *État* de l'administration ; `sudo portunia-gate status` sur le serveur. Santé générale, durée de service, processeur, mémoire, disque et réseau avec les courbes des dernières 24 heures, services (base, certificat HTTPS, relais, heure, notifications, durcissement), stockage (enregistrements, rythme, « disque plein dans N jours »), activité et intégrité du journal signé. La pastille de la Gate dans la barre latérale passe à l'orange ou au rouge quand quelque chose demande votre attention. Au-delà de 85 % de disque occupé, les administrateurs sont prévenus.
 
 **Conservation des enregistrements** : *Garder les enregistrements* sur la page État (ou Réglages, ou `sudo portunia-gate setting recording_days 180`). Au-delà, les enregistrements des sessions terminées sont supprimés chaque heure ; les sessions restent dans la liste, et la suppression est notée au journal. Par défaut, ils sont gardés toujours.
+
+**Compression** (Gate 0.42) : un jour après la fin d'une session, son enregistrement est compressé ; un enregistrement SSH prend 5 à 10 fois moins de place. Rien ne change pour la relecture, et la signature reste vérifiée sur le contenu d'origine. Un fichier altéré n'est pas compressé : il reste tel quel, comme preuve.
+
+**Conservation du journal** (Gate 0.42, Portunia 0.80) : *Garder le journal* sur la page État (ou Réglages, ou `sudo portunia-gate setting audit_days 365`). Par défaut, le journal est gardé toujours ; sinon, au moins 90 jours. Chaque jour, la Gate vérifie la chaîne puis supprime les événements plus anciens ; une **ancre signée** garde la chaîne vérifiable à partir du premier événement conservé. Un journal altéré n'est jamais purgé. Exportez avant ce que vous devez garder plus longtemps (`sudo portunia-gate audit --last 5000 --csv journal.csv`).
 
 | Besoin | Paquet Debian | Docker |
 | --- | --- | --- |
@@ -822,6 +828,8 @@ sudo portunia-gate setting remember_password off             # mémoriser le mot
 sudo portunia-gate setting own_replay on                     # chaque compte relit ses propres sessions
 sudo portunia-gate setting sensitive_commands "rm -rf,shutdown"   # repérées dans le lecteur
 sudo portunia-gate setting file_copies_mb 200                 # garde les fichiers copiés en Bureau à distance (Mo par session ; 0 : aucun)
+sudo portunia-gate setting recording_days 180                 # supprime les enregistrements des sessions terminées depuis plus de 180 jours (0 : garder)
+sudo portunia-gate setting audit_days 365                     # supprime les événements du journal de plus de 365 jours (0 : garder ; au moins 90)
 
 # Contrôle
 sudo portunia-gate audit --verify --last 50

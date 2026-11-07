@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.41.1 · Portunia 0.79.0 · Updated: 6 November 2026*
+*Portunia Gate 0.42.0 · Portunia 0.80.0 · Updated: 7 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -560,7 +560,7 @@ Recordings are stored in `/var/lib/portunia-gate/enregistrements/YYYY/MM/`; an R
 
 Audit › **Log**: every event (sign-ins, failures, sessions, administration, replays), filterable by account, server or event, with CSV export. Each event contains the fingerprint of the previous one: a deleted or modified line breaks the chain.
 
-**Check the chain**: button in Portunia, or `sudo portunia-gate audit --verify`, which shows the first missing or modified event. Do it regularly and before handing over any evidence.
+**Check the chain**: button in Portunia, or `sudo portunia-gate audit --verify`, which shows the first missing or modified event. Do it regularly and before handing over any evidence. After an audit log purge (§16), the check starts from the first kept event.
 
 ```
 sudo portunia-gate audit --last 100          # latest events
@@ -637,6 +637,8 @@ sudo ./installer.sh update          # Docker, from the repository folder
 4.  Run the update: with the package, download and fingerprint check, then installation; with Docker, `git pull` then rebuild. The database schema is updated at startup.
 5.  Check: `sudo portunia-gate info` (version), `sudo systemctl status portunia-gate`, a sign-in from Portunia.
 
+**Gate that no longer starts**: since 0.42, `installer.sh update` reads the installed version from the package, not from the Gate, so it also replaces a version that no longer starts. To reinstall a package already downloaded: `sudo bash installer.sh --package portunia-gate_amd64.deb update`.
+
 The web portal loads its new pages by itself after an update. If Portunia says that a feature requires a more recent Gate (portal: 0.7, assistance: 0.11, RDP vault: 0.29), this is the command to run.
 
 ### From Portunia (Gate 0.39, Debian package)
@@ -652,6 +654,10 @@ A separate system service, run as root, backs up the database, downloads and che
 **Gate status** (Gate 0.39, Portunia 0.78): Gate **⋯** menu › **Gate status**, or the *Status* section of the administration; `sudo portunia-gate status` on the server. Overall health, uptime, processor, memory, disk and network with the last 24 hours' curves, services (database, HTTPS certificate, relays, clock, notifications, hardening), storage (recordings, rate, « disk full in N days »), activity and integrity of the signed log. The Gate's dot in the sidebar turns orange or red when something needs your attention. Above 85 % disk use, the administrators are told.
 
 **Recording retention**: *Keep recordings* on the Status page (or Settings, or `sudo portunia-gate setting recording_days 180`). Beyond it, the recordings of ended sessions are deleted every hour; the sessions stay in the list, and the deletion is logged. By default they are kept forever.
+
+**Compression** (Gate 0.42): one day after a session ends, its recording is compressed; an SSH recording takes 5 to 10 times less space. Nothing changes for replay, and the signature is still checked on the original content. An altered file is not compressed: it stays as it is, as evidence.
+
+**Audit log retention** (Gate 0.42, Portunia 0.80): *Keep the audit log* on the Status page (or Settings, or `sudo portunia-gate setting audit_days 365`). By default the log is kept forever; otherwise at least 90 days. Every day, the Gate checks the chain, then deletes the older events; a **signed anchor** keeps the chain verifiable from the first kept event. An altered log is never purged. Export beforehand what you must keep longer (`sudo portunia-gate audit --last 5000 --csv journal.csv`).
 
 | Need | Debian package | Docker |
 | --- | --- | --- |
@@ -822,6 +828,8 @@ sudo portunia-gate setting remember_password off             # remember the Gate
 sudo portunia-gate setting own_replay on                     # each account replays its own sessions
 sudo portunia-gate setting sensitive_commands "rm -rf,shutdown"   # flagged in the player
 sudo portunia-gate setting file_copies_mb 200                 # keeps files copied in Remote Desktop (MB per session; 0: none)
+sudo portunia-gate setting recording_days 180                 # deletes recordings of sessions ended over 180 days ago (0: keep)
+sudo portunia-gate setting audit_days 365                     # deletes audit log events older than 365 days (0: keep; at least 90)
 
 # Control
 sudo portunia-gate audit --verify --last 50
