@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.42.0 · Portunia 0.80.0 · Mise à jour : 7 novembre 2026*
+*Portunia Gate 0.43.0 · Portunia 0.81.0 · Mise à jour : 7 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -514,7 +514,7 @@ Un dépanneur prend la main sur le PC d'un proche ou d'un client. La personne va
 -   Un cadre et une barre **Arrêter** restent sur l'écran ; Échap trois fois arrête aussi.
 -   Un code faux met fin à la tentative ; la personne en reçoit un nouveau. Une place attend 30 minutes au plus.
 
-Journal : `assistance.ouverte`, `assistance.fermee`, `assistance.reglage`, `assistance.place_inconnue`, `assistance.programme`. Une même adresse ne peut ouvrir plus de 20 connexions en 10 minutes.
+Journal : `assistance.ouverte`, `assistance.fermee`, `assistance.coupure`, `assistance.reprise`, `assistance.reglage`, `assistance.place_inconnue`, `assistance.programme`. Une même adresse ne peut ouvrir plus de 20 connexions en 10 minutes.
 
 <a id="audit"></a>
 
@@ -959,7 +959,7 @@ Après une modification : `sudo systemctl restart portunia-gate` (coupe les sess
 | Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.session_ouverte` `web.session_fermee` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` `enregistrement.exporte` |
 | Portail | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
-| Assistance | `assistance.ouverte` `assistance.fermee` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |
+| Assistance | `assistance.ouverte` `assistance.fermee` `assistance.coupure` `assistance.reprise` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |
 
 > [!NOTE]
 > **À surveiller** — `auth.echec` en rafale (attaque par essais), `cible.empreinte_differente` (serveur remplacé ou usurpé), `enregistrement.revele` (révélation de saisies), `compte.*` et `regle.*` hors des changements prévus.
