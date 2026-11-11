@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.44.1 · Portunia 0.83.0 · Mise à jour : 7 novembre 2026*
+*Portunia Gate 0.46.0 · Portunia 0.91.0 · Mise à jour : 11 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -418,11 +418,12 @@ Interfaces web (Gate 0.30) : bouton du serveur, puis l'application dans un nouve
 
 1.  **Créer le tunnel** dans Cloudflare : **Networking › Tunnels › Create Tunnel**, un nom (ex. `portunia-gate`), puis copier la commande d'installation affichée, pour n'importe quel système. Elle contient le jeton ; ne pas l'exécuter.
 2.  **La donner à la Gate** : Administrer › **Portail web** › mode **Cloudflare**, coller la commande, **Enregistrer le jeton**. La Gate télécharge et lance `cloudflared` elle-même ; le tunnel passe à **Healthy** dans Cloudflare. Sans Portunia : `sudo bash installer.sh portail`.
-3.  **Publier l'adresse** : dans le tunnel, onglet **Routes › Add route › Published application**. **Subdomain** et **Domain** (le *Full hostname*, ex. `acces.votre-domaine.fr`, est l'adresse publique), **Path** vide, **Service URL** `http://localhost:8445`, puis **Add route**. Jamais de route `ssh://` ou `rdp://` vers vos serveurs : elle contournerait la Gate.
-4.  **Vérifier** : adresse publique `https://` + Full hostname, **Enregistrer**, puis **Tester l'adresse publique**.
-5.  **Conseillé** : une application **Cloudflare Access** sur cette adresse (compte de l'entreprise exigé avant même la page), et **Turnstile** (anti-robots).
-6.  **Dans Portunia** : Administrer › **Portail web** : groupe, durées, copier-coller, Turnstile, Enregistrer, puis l'interrupteur. En ligne de commande : `sudo portunia-gate portal set --url https://acces.votre-domaine.fr` (et `--group`, `--duration`, `--idle`, `--clipboard`, `--code`), puis `sudo portunia-gate portal on`.
-7.  **Créer le groupe** (« Accès web » par défaut) et y ajouter les comptes concernés.
+3.  **Version de cloudflared** (Gate 0.45) : la Gate la tient à jour. Toutes les 6 heures, elle consulte les versions de Cloudflare, vérifie l'empreinte (donnée deux fois par GitHub, elles doivent concorder), puis relance le tunnel sur la nouvelle version quand aucune session n'est ouverte ; après un jour d'attente, la nuit (3 h à 5 h) en prévenant les personnes connectées. La relance coupe les connexions de l'extérieur quelques secondes. Sous le tunnel, **Version de cloudflared** montre la version lancée et la dernière vérification ; **Mettre à jour automatiquement** peut être décoché (la Gate signale alors les nouvelles versions sans les installer) et **Mettre à jour maintenant** passe tout de suite à la dernière. En ligne de commande : `sudo portunia-gate portal tunnel-update` (`now`, `auto`, `manual`).
+4.  **Publier l'adresse** : dans le tunnel, onglet **Routes › Add route › Published application**. **Subdomain** et **Domain** (le *Full hostname*, ex. `acces.votre-domaine.fr`, est l'adresse publique), **Path** vide, **Service URL** `http://localhost:8445`, puis **Add route**. Jamais de route `ssh://` ou `rdp://` vers vos serveurs : elle contournerait la Gate.
+5.  **Vérifier** : adresse publique `https://` + Full hostname, **Enregistrer**, puis **Tester l'adresse publique**.
+6.  **Conseillé** : une application **Cloudflare Access** sur cette adresse (compte de l'entreprise exigé avant même la page), et **Turnstile** (anti-robots).
+7.  **Dans Portunia** : Administrer › **Portail web** : groupe, durées, copier-coller, Turnstile, Enregistrer, puis l'interrupteur. En ligne de commande : `sudo portunia-gate portal set --url https://acces.votre-domaine.fr` (et `--group`, `--duration`, `--idle`, `--clipboard`, `--code`), puis `sudo portunia-gate portal on`.
+8.  **Créer le groupe** (« Accès web » par défaut) et y ajouter les comptes concernés.
 
 <a id="deux-entrees"></a>
 
@@ -860,6 +861,7 @@ sudo portunia-gate portal cert                                 # affiche le cert
 sudo portunia-gate portal cert --import portail.pfx            # ou --import cert.pem --key cle.pem ; --remove : auto-signé
 sudo portunia-gate portal tunnel "eyJh…"                       # jeton Cloudflare (« - » : lu sur l'entrée standard) ; --remove
 sudo portunia-gate portal tunnel                               # état du tunnel
+sudo portunia-gate portal tunnel-update                        # versions de cloudflared ; now, auto (défaut), manual
 sudo portunia-gate portal relay-add dmz-01 10.0.5.20:8447      # relais dédié : affiche son code d'appairage
 sudo portunia-gate portal relay-list
 sudo portunia-gate portal relay-remove dmz-01
@@ -911,7 +913,7 @@ Bureau à distance hors de l'onglet de Portunia : mstsc, Windows App ou Remmina,
 | Gate (local) | Gate | 8445/tcp | Portail en HTTP pour cloudflared ; écoute `127.0.0.1`, jamais exposé. |
 | Cloudflare | Gate | 8446/tcp | Option « proxy Cloudflare » au lieu du tunnel ; adresses Cloudflare seulement. |
 | Gate | Cloudflare | sortant | Tunnel cloudflared lancé par la Gate (portail et page d'assistance) ; téléchargement de cloudflared depuis GitHub. |
-| Gate | github.com | 443/tcp | Téléchargement de cloudflared (une fois par version) et de Portunia Assistance. |
+| Gate | github.com | 443/tcp | Versions de cloudflared (api.github.com, toutes les 6 heures) et leur téléchargement ; Portunia Assistance. |
 | Gate | Serveurs | 22, 3389, 443… | Connexions vers les serveurs protégés. |
 | Gate | github.com | 443 | Mises à jour (paquet) et téléchargement de Portunia Assistance. |
 | Postes | github.com | 443 | Mises à jour de Portunia. |
