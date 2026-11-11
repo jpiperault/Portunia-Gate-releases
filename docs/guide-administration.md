@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.46.0 · Portunia 0.91.0 · Mise à jour : 11 novembre 2026*
+*Portunia Gate 0.47.0 · Portunia 0.92.0 · Mise à jour : 11 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -199,6 +199,7 @@ Un code ne sert qu'une fois : le même code à 6 chiffres est refusé s'il a dé
 | Mot de passe provisoire | Nouveau mot de passe à transmettre ; **ferme toutes les sessions du compte** : Portunia, portail web et sessions ouvertes. Pour un mot de passe oublié ou volé. | `user passwd` |
 | Réinitialiser le code | Téléphone perdu ou changé : l'utilisateur enrôlera un nouveau code à sa prochaine connexion. Ferme aussi toutes ses sessions. | `user totp` |
 | Clé SSH | Ajoute une clé publique (`ssh-ed25519 AAAA…`) ; Portunia affiche son empreinte. | `user key` |
+| Téléphones (Gate 0.47) | Téléphones enrôlés dans l'application Android Portunia Gate : ils se connectent au portail web par empreinte, sans mot de passe ni code. Date d'enrôlement, dernier usage, adresse ; **Retirer** ou **Tout retirer** ferme aussi leurs sessions du portail. Le bouton n'apparaît que si le compte en a. Un téléphone se retire aussi tout seul après 90 jours sans usage, et avec un mot de passe provisoire, un code réinitialisé ou un compte désactivé. Le titulaire et les administrateurs sont prévenus à chaque enrôlement (notifications). | `user devices` |
 | Supprimer | Efface le compte ; l'historique de ses sessions et le journal sont gardés. | `user delete` |
 
 ### Départ d'un collaborateur
@@ -781,6 +782,7 @@ sudo portunia-gate user disable marc                          # --undo pour réa
 sudo portunia-gate user policy presta "key+totp"              # combinaisons du compte ; "" = réglage général
 sudo portunia-gate user reset-password marc                   # nouveau mot de passe provisoire, affiché une fois
 sudo portunia-gate user reset-code marc                       # efface le code : nouvel enrôlement (Portunia ou user totp)
+sudo portunia-gate user devices marc                          # téléphones enrôlés (empreinte) ; --remove ID, --remove-all
 sudo portunia-gate user delete marc
 
 # Groupes

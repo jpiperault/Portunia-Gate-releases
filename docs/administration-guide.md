@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.46.0 · Portunia 0.91.0 · Updated: 11 November 2026*
+*Portunia Gate 0.47.0 · Portunia 0.92.0 · Updated: 11 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -199,6 +199,7 @@ A code can be used only once: the same 6-digit code is refused if it has already
 | Temporary password | New password to send; **closes all the account's sessions**: Portunia, web portal and open sessions. For a forgotten or stolen password. | `user passwd` |
 | Reset the code | Lost or changed phone: the user will enrol a new code at their next sign-in. Also closes all their sessions. | `user totp` |
 | SSH key | Adds a public key (`ssh-ed25519 AAAA…`); Portunia shows its fingerprint. | `user key` |
+| Phones (Gate 0.47) | Phones enrolled in the Portunia Gate Android app: they sign in to the web portal with a fingerprint, without password or code. Enrolment date, last use, address; **Remove** or **Remove all** also closes their portal sessions. The button appears only when the account has some. A phone is also removed by itself after 90 days without use, and with a temporary password, a reset code or a disabled account. The owner and the administrators are notified at each enrolment (notifications). | `user devices` |
 | Delete | Erases the account; its session history and the log are kept. | `user delete` |
 
 ### When someone leaves
@@ -781,6 +782,7 @@ sudo portunia-gate user disable marc                          # --undo to enable
 sudo portunia-gate user policy contractor "key+totp"          # the account's combinations; "" = general setting
 sudo portunia-gate user reset-password marc                   # new temporary password, shown once
 sudo portunia-gate user reset-code marc                       # erases the code: new enrolment (Portunia or user totp)
+sudo portunia-gate user devices marc                          # enrolled phones (fingerprint); --remove ID, --remove-all
 sudo portunia-gate user delete marc
 
 # Groups
