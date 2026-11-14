@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.47.0 · Portunia 0.92.0 · Mise à jour : 11 novembre 2026*
+*Portunia Gate 0.48.0 · Portunia 0.93.0 · Mise à jour : 14 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -332,6 +332,25 @@ sudo portunia-gate target add vcenter --host 10.0.4.10 --protocol https --folder
 sudo portunia-gate rule add vsphere --group "Admins VMware" --targets vcenter --days lun-ven --hours 7-20
 sudo portunia-gate target add mail --host 192.168.1.16 --protocol https --mode coffre --account admin --password   # coffre : la Gate connecte
 sudo portunia-gate target edit mail --web-login remplir                                                             # auto, remplir ou basic
+```
+
+<a id="sortie-web"></a>
+
+### Sortie web : naviguer par la Gate (Gate 0.48, Portunia 0.93)
+
+-   Pour qu'un groupe navigue sur Internet **avec la connexion de la Gate** : sites réservés à l'adresse de l'entreprise, consoles d'éditeurs, téléchargements depuis un poste qui n'a pas Internet. Protocole **Sortie web** : ni adresse, ni compte, ni secret. Donnez le serveur à un groupe par une règle, comme les autres (jours, heures, approbation).
+-   Dans Portunia, l'utilisateur clique sur le serveur (badge **NAVIGUER**) : Portunia ouvre un **Edge, un Chrome ou un Brave dédié**, dans un profil à part (ni les cookies ni l'historique ne se mêlent au navigateur habituel), dont tout le trafic passe par le SSH de la Gate. Les sites voient l'adresse de la Gate. La vidéo passe à pleine vitesse : la Gate relaie le trafic sans le réencoder. Fonction de l'édition **Pro** de Portunia.
+-   **Filtre**, porté par le serveur : **Domaines autorisés** (vide : tout Internet ; un domaine couvre ses sous-domaines), **Domaines bloqués** (l'emportent sur les autorisés), **Ports permis** (80 et 443 par défaut, `*` pour tous). Plusieurs serveurs de sortie peuvent avoir des filtres différents, pour des groupes différents.
+-   **Les réseaux internes sont toujours refusés** : la Gate résout elle-même chaque nom et refuse les adresses de boucle locale, privées (10.x, 172.16–31.x, 192.168.x), de lien local, CGNAT, multicast. Sinon, la sortie web atteindrait les serveurs du réseau sans passer par leurs propres règles. Pour une application interne, créez une [interface web](#web).
+-   **Ce qui est noté** : une session `navigation` par ouverture dans *Audit › Sessions*, avec les 20 premiers sites ; au journal `navigation.ouverte`, `navigation.refusee` (premier refus d'un site, avec la raison) et `navigation.fermee` (durée, octets, les 100 sites les plus chargés). La Gate ne déchiffre pas le HTTPS : elle voit **les sites, pas les pages**. Ni l'image ni la frappe ne sont enregistrées.
+-   **Coupure** : couper la session (*Audit › En direct*), retirer la règle ou désactiver le compte ferme le navigateur dédié. Sans Portunia, il ne passe plus du tout : il ne repart jamais par la connexion directe du poste.
+-   **Limites** : pas dans le portail web (il faut Portunia) ; seul TCP passe (HTTP/3 et WebRTC sont coupés hors du proxy) ; les pages s'exécutent sur le poste, comme dans un navigateur ordinaire ; pendant la navigation, le proxy local de Portunia (127.0.0.1, port tiré au hasard) est utilisable par les autres programmes de la même session Windows. 256 connexions ouvertes en même temps au plus.
+
+```
+sudo portunia-gate target add internet --protocol sortie --folder Internet
+sudo portunia-gate target add editeurs --protocol sortie --domains "microsoft.com, github.com" --block-domains "gist.github.com"
+sudo portunia-gate rule add internet-equipe --group equipe --targets internet --days lun-ven --hours 8-19
+sudo portunia-gate sessions --server internet
 ```
 
 ### Supprimer un serveur
@@ -800,6 +819,8 @@ sudo portunia-gate target add fw-edge --host 10.0.0.1 --mode rebond --folder Ré
 sudo portunia-gate target add srv-ad-01 --host 10.0.3.10 --protocol rdp --mode enregistre --folder Windows
 sudo portunia-gate target add srv-paie --host 10.0.3.12 --protocol rdp --mode coffre --account "ACME\svc-paie" --password   # RDP au coffre (Gate 0.29)
 sudo portunia-gate target add vcenter --host 10.0.4.10 --protocol https --folder Infrastructure   # interface web, mode enregistré (Gate 0.30)
+sudo portunia-gate target add internet --protocol sortie --domains "" --block-domains "" --ports "80,443"   # sortie web (Gate 0.48)
+sudo portunia-gate target edit internet --domains "microsoft.com, github.com"                       # filtre d'une sortie web
 sudo portunia-gate target add rds-02 --host 10.0.3.11 --port 3390 --protocol rdp --mode rebond --account "ACME\support"
 sudo portunia-gate target list
 sudo portunia-gate target edit web-01 --folder Prod --account root   # aussi --rename, --host, --port, --mode
@@ -960,7 +981,7 @@ Après une modification : `sudo systemctl restart portunia-gate` (coupe les sess
 | Groupes, règles, réglages | `groupe.cree` `groupe.supprime` `groupe.membre_ajoute` `regle.creee` `regle.modifiee` `regle.supprimee` `reglage.modifie` |
 | Serveurs | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
 | Fichiers (Bureau à distance) | `fichier.copie` (sens, nom, taille, SHA-256, copie gardée) `fichier.bloque` (tentatives retenues faute d'autorisation) |
-| Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.session_ouverte` `web.session_fermee` |
+| Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.session_ouverte` `web.session_fermee` `navigation.ouverte` `navigation.refusee` `navigation.fermee` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` `enregistrement.exporte` |
 | Portail | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
 | Assistance | `assistance.ouverte` `assistance.fermee` `assistance.coupure` `assistance.reprise` `assistance.fichier` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |

@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.47.0 · Portunia 0.92.0 · Updated: 11 November 2026*
+*Portunia Gate 0.48.0 · Portunia 0.93.0 · Updated: 14 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -332,6 +332,25 @@ sudo portunia-gate target add vcenter --host 10.0.4.10 --protocol https --folder
 sudo portunia-gate rule add vsphere --group "VMware admins" --targets vcenter --days mon-fri --hours 7-20
 sudo portunia-gate target add mail --host 192.168.1.16 --protocol https --mode vault --account admin --password   # vault: the Gate signs in
 sudo portunia-gate target edit mail --web-login fill                                                               # auto, fill or basic
+```
+
+<a id="sortie-web"></a>
+
+### Web egress: browsing through the Gate (Gate 0.48, Portunia 0.93)
+
+-   So that a group browses the Internet **with the Gate's connection**: sites reserved to the company's address, vendor consoles, downloads from a workstation without Internet access. Protocol **Web egress**: no address, account nor secret. Give the server to a group with a rule, like the others (days, hours, approval).
+-   In Portunia, the user clicks the server (badge **BROWSE**): Portunia opens a **dedicated Edge, Chrome or Brave**, in a profile of its own (cookies and history never mix with the usual browser), whose whole traffic goes through the Gate's SSH. Sites see the Gate's address. Video plays at full speed: the Gate relays the traffic without re-encoding it. A feature of Portunia's **Pro** edition.
+-   **Filter**, carried by the server: **Allowed domains** (empty: all of Internet; a domain covers its subdomains), **Blocked domains** (win over allowed ones), **Allowed ports** (80 and 443 by default, `*` for all). Several egress servers can have different filters, for different groups.
+-   **Internal networks are always refused**: the Gate resolves every name itself and refuses loopback, private (10.x, 172.16–31.x, 192.168.x), link-local, CGNAT and multicast addresses. Otherwise the web egress would reach the network's servers without going through their own rules. For an internal application, create a [web interface](#web).
+-   **What is logged**: one `navigation` session per opening in *Audit › Sessions*, with the first 20 sites; in the log `navigation.ouverte`, `navigation.refusee` (first refusal of a site, with the reason) and `navigation.fermee` (duration, bytes, the 100 busiest sites). The Gate does not decrypt HTTPS: it sees **the sites, not the pages**. Neither the screen nor the keystrokes are recorded.
+-   **Cut**: cutting the session (*Audit › Live*), removing the rule or disabling the account closes the dedicated browser. Without Portunia it no longer goes anywhere: it never falls back to the workstation's direct connection.
+-   **Limits**: not in the web portal (Portunia is needed); only TCP goes through (HTTP/3 and WebRTC are turned off outside the proxy); pages run on the workstation, as in an ordinary browser; while browsing, Portunia's local proxy (127.0.0.1, random port) can be used by the other programs of the same Windows session. 256 connections open at once at most.
+
+```
+sudo portunia-gate target add internet --protocol egress --folder Internet
+sudo portunia-gate target add vendors --protocol egress --domains "microsoft.com, github.com" --block-domains "gist.github.com"
+sudo portunia-gate rule add internet-staff --group staff --targets internet --days mon-fri --hours 8-19
+sudo portunia-gate sessions --server internet
 ```
 
 ### Deleting a server
@@ -800,6 +819,8 @@ sudo portunia-gate target add fw-edge --host 10.0.0.1 --mode rebond --folder Net
 sudo portunia-gate target add srv-ad-01 --host 10.0.3.10 --protocol rdp --mode enregistre --folder Windows
 sudo portunia-gate target add srv-payroll --host 10.0.3.12 --protocol rdp --mode coffre --account "ACME\svc-payroll" --password   # RDP in the vault (Gate 0.29)
 sudo portunia-gate target add vcenter --host 10.0.4.10 --protocol https --folder Infrastructure   # web interface, recorded mode (Gate 0.30)
+sudo portunia-gate target add internet --protocol egress --domains "" --block-domains "" --ports "80,443"   # web egress (Gate 0.48)
+sudo portunia-gate target edit internet --domains "microsoft.com, github.com"                       # filter of a web egress
 sudo portunia-gate target add rds-02 --host 10.0.3.11 --port 3390 --protocol rdp --mode rebond --account "ACME\support"
 sudo portunia-gate target list
 sudo portunia-gate target edit web-01 --folder Prod --account root   # also --rename, --host, --port, --mode
@@ -960,7 +981,7 @@ After a change: `sudo systemctl restart portunia-gate` (cuts open sessions).
 | Groups, rules, settings | `groupe.cree` `groupe.supprime` `groupe.membre_ajoute` `regle.creee` `regle.modifiee` `regle.supprimee` `reglage.modifie` |
 | Servers | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
 | Files (Remote Desktop) | `fichier.copie` (direction, name, size, SHA-256, copy kept) `fichier.bloque` (attempts held back for lack of permission) |
-| Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.session_ouverte` `web.session_fermee` |
+| Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.session_ouverte` `web.session_fermee` `navigation.ouverte` `navigation.refusee` `navigation.fermee` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` `enregistrement.exporte` |
 | Portal | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
 | Assistance | `assistance.ouverte` `assistance.fermee` `assistance.coupure` `assistance.reprise` `assistance.fichier` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |
