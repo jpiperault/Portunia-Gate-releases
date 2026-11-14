@@ -1,6 +1,6 @@
 # Administration guide
 
-*Portunia Gate 0.48.0 · Portunia 0.93.0 · Updated: 14 November 2026*
+*Portunia Gate 0.52.0 · Portunia 0.94.0 · Updated: 14 November 2026*
 
 > The Portunia user guide is in [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/user-guide.md). Version française : [guide d'administration](guide-administration.md).
 
@@ -199,7 +199,7 @@ A code can be used only once: the same 6-digit code is refused if it has already
 | Temporary password | New password to send; **closes all the account's sessions**: Portunia, web portal and open sessions. For a forgotten or stolen password. | `user passwd` |
 | Reset the code | Lost or changed phone: the user will enrol a new code at their next sign-in. Also closes all their sessions. | `user totp` |
 | SSH key | Adds a public key (`ssh-ed25519 AAAA…`); Portunia shows its fingerprint. | `user key` |
-| Phones (Gate 0.47) | Phones enrolled in the Portunia Gate Android app: they sign in to the web portal with a fingerprint, without password or code. Enrolment date, last use, address; **Remove** or **Remove all** also closes their portal sessions. The button appears only when the account has some. A phone is also removed by itself after 90 days without use, and with a temporary password, a reset code or a disabled account. The owner and the administrators are notified at each enrolment (notifications). | `user devices` |
+| Phones (Gate 0.47) | Phones enrolled in the Portunia Gate Android app: they sign in to the web portal with a fingerprint, without password or code. Enrolment date, last use, address; **Remove** or **Remove all** also closes their portal sessions. The button appears only when the account has some. A phone is also removed by itself after 90 days without use, and with a temporary password, a reset code or a disabled account. The owner and the administrators are notified at each enrolment (notifications). Since Gate 0.49, enrolment needs a sign-in **with the code** within 10 minutes and the token it hands over (Portunia Gate app 0.93.1 or later); a refusal is logged `appareil.refuse`. Removing a phone also closes the terminals and desktops opened from its sessions. | `user devices` |
 | Delete | Erases the account; its session history and the log are kept. | `user delete` |
 
 ### When someone leaves
@@ -295,6 +295,8 @@ sudo portunia-gate target list        # protocol, mode, fingerprint ("to remembe
 
 `--port` if the server does not listen on 3389; in jump and recorded modes, `--account` is optional (account offered at opening, never a password); in vault mode, it is required with `--password`. A rule's `--sftp` and `--tunnels` options only concern SSH. Then: `target edit` (address, mode, account…), `target forget` after reinstalling Windows, `target delete` (Gate 0.25 and later, see Appendix A).
 
+**Fingerprint to confirm in vault mode (Gate 0.50).** Before sending the vault password to a Windows server, the Gate requires a certificate fingerprint confirmed by an administrator: otherwise a fake server present at the first contact would receive the password. After adding a vault server (or a `target forget`), read the fingerprint and confirm it: `sudo portunia-gate target trust srv-payroll` (shows the fingerprint, asks for confirmation; `--fingerprint TLS:…` without a question), or Administer › Servers › **Confirm the fingerprint** in Portunia (0.94 and later). Compare it with the one of the server's "Remote Desktop" certificate. Until then, opening is refused (`cible.empreinte_a_confirmer`). Servers whose fingerprint is already remembered do not change. Log: `cible.empreinte_confirmee`.
+
 <a id="rdp-natif"></a>
 
 ### Ordinary RDP clients: native RDP (Gate 0.31)
@@ -306,7 +308,7 @@ sudo portunia-gate target list        # protocol, mode, fingerprint ("to remembe
 -   **Recorded**: the same, with the Windows account the user types in Portunia when preparing the file. The Gate keeps it **in memory** until the client connects (at most the file's validity), never on disk, then forgets it. Without an account, only for a server that accepts TLS without NLA: the user then signs in on the Windows sign-in screen.
 -   **Certificate**: in Vault and Recorded, the client sees the Gate's API certificate; without a company certificate, mstsc warns once: compare the fingerprint shown in Administer › Native RDP (or `sudo portunia-gate rdp show`). In Jump, it sees the Windows server's own.
 -   **Log**: `rdp_natif.fichier` (file prepared, with or without an account), then the usual session events, the address followed by "(natif)"; refusals: `acces.refuse` with "type": "rdp natif" and the reason. A file is single-use: the client's automatic reconnection after a network cut is refused.
--   **Without Portunia** (Gate 0.34): computer = the Gate's address and this port, user = `login%server` (`login%server%123456` with the code when the account's policy asks for one), password = the account's **RDP password**. The Gate checks them through NLA, then opens the server as in Vault or Recorded mode (Jump: Portunia's file only). The user creates their RDP password in the web portal (*Connect with mstsc or Windows App*, with a .rdp shortcut per server); an administrator with `sudo portunia-gate user rdp-password LOGIN` (`--remove` takes it away). It is separate from the account password, sealed by the Gate and shown only once. A Recorded server must accept a connection without NLA (the user signs in to Windows in its sign-in screen). Log: `rdp_natif.mot_de_passe`, and refusals with their reason (unknown server, missing code, too many attempts…).
+-   **Without Portunia** (Gate 0.34): computer = the Gate's address and this port, user = `login%server` (`login%server%123456` with the code when the account's policy asks for one), password = the account's **RDP password**. The Gate checks them through NLA (an account whose policy requires an SSH key is refused since Gate 0.50: the RDP password and code do not replace it), then opens the server as in Vault or Recorded mode (Jump: Portunia's file only, and only when the rule gives the **files** right since Gate 0.50: end to end, the Gate cannot block file copy from an ordinary RDP client). The user creates their RDP password in the web portal (*Connect with mstsc or Windows App*, with a .rdp shortcut per server); an administrator with `sudo portunia-gate user rdp-password LOGIN` (`--remove` takes it away). It is separate from the account password, sealed by the Gate and shown only once. Since Gate 0.49, the portal asks for the account's password and code again before creating it. A Recorded server must accept a connection without NLA (the user signs in to Windows in its sign-in screen). Log: `rdp_natif.mot_de_passe`, and refusals with their reason (unknown server, missing code, too many attempts…).
 
 ```
 sudo portunia-gate rdp set --port 3390 --modes rebond,coffre,enregistre --ticket-seconds 120
@@ -319,7 +321,7 @@ sudo portunia-gate rdp show
 ### Web interfaces (Gate 0.30, vault 0.32)
 
 -   For administration consoles (vCenter, iDRAC, iLO, firewalls, NAS…) and internal applications. Protocol **Web interface (HTTPS)** or **(HTTP)**, the server's address and port; **recorded** or **vault** mode (no jump: the Gate reads every request). Recorded: the application's credentials are typed in its page, as usual.
--   **Vault** (Gate 0.32): the Gate signs the user in with the vault account (**Account on the server** and its password). The password **never reaches the browser**: the Gate fills the sign-in form with the account and, in the password field, a one-time token (10 minutes, this account and this server only); when the browser sends the sign-in, whatever its format (form, JSON, HTTP header), the Gate swaps the token for the password. **Sign-in**: *Fill in the sign-in form and submit it* (default; also for applications that sign in with JavaScript, and HTTP authentication when the server asks for it), *Fill in the form only* (the user clicks), or *HTTP authentication (Basic)* on every request (equipment that shows the browser's sign-in window). Each use of the password is logged (`web.coffre`: server, path, account). Limits: an application that hashes the password in the browser, or asks for a second factor or a captcha, does not sign in by itself; a user able to manipulate the page could reuse their token in another request within 10 minutes, which `web.coffre` shows.
+-   **Vault** (Gate 0.32): the Gate signs the user in with the vault account (**Account on the server** and its password). The password **never reaches the browser**: the Gate fills the sign-in form with the account and, in the password field, a one-time token (10 minutes, this account and this server only); when the browser sends the sign-in, whatever its format (form, JSON, HTTP header), the Gate swaps the token for the password. **Sign-in**: *Fill in the sign-in form and submit it* (default; also for applications that sign in with JavaScript, and HTTP authentication when the server asks for it), *Fill in the form only* (the user clicks), or *HTTP authentication (Basic)* on every request (equipment that shows the browser's sign-in window). Each use of the password is logged (`web.coffre`: server, path, account). Since Gate 0.49, the token is replaced only in a **sign-in request**: POST method, form or JSON, token present once and the whole value of a single "password" field (*pass*, *pwd*, *mdp*, *secret*). Never in the address nor in another field: a page that echoes what it receives (404 page, search) can no longer show the password. A token seen elsewhere is destroyed and logged (`web.coffre_refuse`); if the response to a sign-in still contains the password, the Gate masks it there (`web.coffre_masque`). Limits: an application that hashes the password in the browser, names its field otherwise, or asks for a second factor or a captcha, does not sign in by itself.
 -   The Gate relays every request: the rule is checked again at most every 30 seconds, each **page opened** is logged (`web.page`: server, path), and so is the opening (`web.ouvert`). The application's images, scripts and calls are not logged. Neither the image nor the keystrokes are recorded.
 -   **Web sessions** (Gate 0.35, Portunia 0.74): each account has a session per web server in *Audit › Sessions* (type `web`), opened at the first request and closed after 15 minutes without a request. **Actions** shows its signed log: pages, data sent (forms, changes), WebSockets and vault use, with path and status, filterable and searchable; never what is typed. Log: `web.session_ouverte`, `web.session_fermee`.
 -   The certificate of an HTTPS server is checked by its fingerprint, kept on the first connection, as for Remote Desktop.
@@ -397,6 +399,7 @@ The State column shows *active*, *outside range* (outside the days or hours, rig
 -   The user asks from Portunia (Gate **⋯** menu › **Approvals**) or the web portal, with a reason and an optional ticket.
 -   The approvers are told by e-mail, Teams or webhook (see *Notifications*) and by Portunia, which shows "Approvals (N waiting)" and a system notification.
 -   An approver grants for 30 minutes to 3 days, or refuses, with a comment. Nobody approves their own request; a request without an answer expires after 24 hours.
+-   **From the web portal and the phone** (Gate 0.51, Portunia 0.94): an approver sees "To decide" in the portal and grants (30 minutes to 1 day) or refuses. The Portunia Gate Android app checks requests every 15 minutes while its portal session is open (without extending it) and shows a notification; tapping it opens the list. A page of an interface relayed by the portal cannot decide (the decision must come from a page of the portal itself).
 -   The user is told 10 minutes before the end (SSH terminal), then their sessions close. **Withdraw** ends a granted access.
 
 Log: `approbation.demandee`, `.accordee`, `.refusee`, `.annulee`, `.terminee`, `.sans_reponse`. Command line: `rule approval NAME on --approvers GROUP`, `approval list`, `approval grant ID --minutes 60`.
@@ -471,7 +474,7 @@ The tunnel only carries HTTPS: the portal goes through, but not Portunia (API on
 3.  **Publish in Cloudflare** with a Cloudflare API token (*Account › Cloudflare Tunnel › Edit* and *Zone › DNS › Edit*), used once and never kept: the Gate adds one TCP route per name to its tunnel, to its own ports (never to your servers), and creates the DNS records. An existing record is never overwritten. By hand: *Routes › Add route › Published application*, type TCP, `localhost:8443`, `localhost:2222`, `localhost:3390`, then **Save the names only**.
 4.  Native RDP must be open (§7) for mstsc.
 
-Recommended: a **Cloudflare Access** application on these names, to require a company account before even reaching the Gate. Connections then reach the Gate from `127.0.0.1` (cloudflared): the log shows that address, and per-address attempt limits apply to all outside access together, per-account limits staying whole. Command line: `sudo portunia-gate portal tcp --api … --ssh … --rdp … --publish`.
+Recommended: a **Cloudflare Access** application on these names, to require a company account before even reaching the Gate. Connections then reach the Gate from cloudflared: since Gate 0.50, the published SSH has a listener of its own (`127.0.0.1:2224`, variable `PORTUNIA_GATE_SSH_CLOUDFLARE_LISTEN`), its connections are logged as `cloudflare` and have their own cap; per-address attempt limits apply to all access through Cloudflare together, per-account limits staying whole. **An SSH published before 0.50** still points to 2222: publish it again (**Publish to Cloudflare** button, or `--publish`) to move to the dedicated listener. Command line: `sudo portunia-gate portal tcp --api … --ssh … --rdp … --publish`.
 
 ### The Web portal screen
 
@@ -528,6 +531,7 @@ A helper takes control of a relative's or a customer's PC. The person goes to `h
 | Page of the person helped | The address to give, with a Copy button. |
 | Helpers' group | Only its members, signed in to the Gate from Portunia, can start an assistance session. |
 | Maximum duration | 1, 4 or 8 h (4 h by default; from 1 to 12 h). The assistance then stops by itself. |
+| Company name and logo (Gate 0.52) | Portunia Assistance shows "ACME support" and your logo instead of Portunia, from the code screen on (Pro and Teams editions). PNG of 96 KiB and 512 × 512 pixels at most. Command line: `sudo portunia-gate assist set --brand ACME --logo /path/logo.png` (`--logo none` removes it). |
 
 ### What to tell the people helped
 
@@ -828,6 +832,7 @@ sudo portunia-gate target edit web-01 --host 10.0.1.21 --password      # new add
 sudo portunia-gate target secret web-01 --password             # replaces the vault secret (or --key-file)
 sudo portunia-gate target secret app-02 --generate             # SSH: the Gate creates a key, installs it with the current password, forgets it
 sudo portunia-gate target forget srv-ad-01                     # reinstalled server: forgets the fingerprint
+sudo portunia-gate target trust srv-payroll                    # Remote Desktop: reads the fingerprint and remembers it once confirmed (vault: required, Gate 0.50)
 sudo portunia-gate target delete fw-edge                       # secret erased; sessions and recordings kept
 
 # Rules
@@ -959,6 +964,7 @@ Remote Desktop outside Portunia's tab: mstsc, Windows App or Remmina, with the s
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `PORTUNIA_GATE_SSH_LISTEN` | `0.0.0.0:2222` | SSH listener. |
+| `PORTUNIA_GATE_SSH_CLOUDFLARE_LISTEN` | `127.0.0.1:2224` | SSH listener of the Cloudflare tunnel (Gate 0.50): connections logged as "cloudflare", separate cap. |
 | `PORTUNIA_GATE_API_LISTEN` | `0.0.0.0:8443` | API listener. |
 | `PORTUNIA_GATE_PORTAL_LISTEN` | `127.0.0.1:8445` | Portal for Cloudflare Tunnel. |
 | `PORTUNIA_GATE_PORTAL_TLS_LISTEN` | not set | Portal HTTPS listener; if set, it overrides the one chosen in Administer › Web portal. |
@@ -981,9 +987,10 @@ After a change: `sudo systemctl restart portunia-gate` (cuts open sessions).
 | Groups, rules, settings | `groupe.cree` `groupe.supprime` `groupe.membre_ajoute` `regle.creee` `regle.modifiee` `regle.supprimee` `reglage.modifie` |
 | Servers | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
 | Files (Remote Desktop) | `fichier.copie` (direction, name, size, SHA-256, copy kept) `fichier.bloque` (attempts held back for lack of permission) |
-| Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.session_ouverte` `web.session_fermee` `navigation.ouverte` `navigation.refusee` `navigation.fermee` |
+| Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.coffre_refuse` `web.coffre_masque` `web.session_ouverte` `web.session_fermee` `navigation.ouverte` `navigation.refusee` `navigation.fermee` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` `enregistrement.exporte` |
 | Portal | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
+| Phones | `appareil.enrole` `appareil.refuse` `appareil.retire` `appareil.expire` |
 | Assistance | `assistance.ouverte` `assistance.fermee` `assistance.coupure` `assistance.reprise` `assistance.fichier` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |
 
 > [!NOTE]

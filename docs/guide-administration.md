@@ -1,6 +1,6 @@
 # Guide d'administration
 
-*Portunia Gate 0.48.0 · Portunia 0.93.0 · Mise à jour : 14 novembre 2026*
+*Portunia Gate 0.52.0 · Portunia 0.94.0 · Mise à jour : 14 novembre 2026*
 
 > Le guide d'utilisation de Portunia est dans [Portunia-releases](https://github.com/jpiperault/Portunia-releases/blob/main/docs/guide-utilisation.md). English version: [administration guide](administration-guide.md).
 
@@ -199,7 +199,7 @@ Un code ne sert qu'une fois : le même code à 6 chiffres est refusé s'il a dé
 | Mot de passe provisoire | Nouveau mot de passe à transmettre ; **ferme toutes les sessions du compte** : Portunia, portail web et sessions ouvertes. Pour un mot de passe oublié ou volé. | `user passwd` |
 | Réinitialiser le code | Téléphone perdu ou changé : l'utilisateur enrôlera un nouveau code à sa prochaine connexion. Ferme aussi toutes ses sessions. | `user totp` |
 | Clé SSH | Ajoute une clé publique (`ssh-ed25519 AAAA…`) ; Portunia affiche son empreinte. | `user key` |
-| Téléphones (Gate 0.47) | Téléphones enrôlés dans l'application Android Portunia Gate : ils se connectent au portail web par empreinte, sans mot de passe ni code. Date d'enrôlement, dernier usage, adresse ; **Retirer** ou **Tout retirer** ferme aussi leurs sessions du portail. Le bouton n'apparaît que si le compte en a. Un téléphone se retire aussi tout seul après 90 jours sans usage, et avec un mot de passe provisoire, un code réinitialisé ou un compte désactivé. Le titulaire et les administrateurs sont prévenus à chaque enrôlement (notifications). | `user devices` |
+| Téléphones (Gate 0.47) | Téléphones enrôlés dans l'application Android Portunia Gate : ils se connectent au portail web par empreinte, sans mot de passe ni code. Date d'enrôlement, dernier usage, adresse ; **Retirer** ou **Tout retirer** ferme aussi leurs sessions du portail. Le bouton n'apparaît que si le compte en a. Un téléphone se retire aussi tout seul après 90 jours sans usage, et avec un mot de passe provisoire, un code réinitialisé ou un compte désactivé. Le titulaire et les administrateurs sont prévenus à chaque enrôlement (notifications). Depuis la Gate 0.49, l'enrôlement demande une connexion **avec le code** dans les 10 minutes et le jeton qu'elle remet (application Portunia Gate 0.93.1 ou suivante) ; un refus est noté `appareil.refuse`. Retirer un téléphone ferme aussi les terminaux et bureaux ouverts depuis ses sessions. | `user devices` |
 | Supprimer | Efface le compte ; l'historique de ses sessions et le journal sont gardés. | `user delete` |
 
 ### Départ d'un collaborateur
@@ -295,6 +295,8 @@ sudo portunia-gate target list        # protocole, mode, empreinte (« à mémor
 
 `--port` si le serveur n'écoute pas sur 3389 ; en rebond et enregistré, `--account` est facultatif (compte proposé à l'ouverture, jamais de mot de passe) ; en coffre, il est obligatoire avec `--password`. Les options `--sftp`, `--tunnels` d'une règle ne concernent que SSH. Ensuite : `target edit` (adresse, mode, compte…), `target forget` après une réinstallation de Windows, `target delete` (Gate 0.25 et suivantes, voir Annexe A).
 
+**Empreinte à confirmer en coffre (Gate 0.50).** Avant d'envoyer le mot de passe du coffre à un serveur Windows, la Gate exige une empreinte de certificat confirmée par un administrateur : sinon, un faux serveur présent au premier contact recevrait le mot de passe. Après l'ajout d'un serveur en coffre (ou un `target forget`), lisez l'empreinte et confirmez-la : `sudo portunia-gate target trust srv-paie` (affiche l'empreinte, demande confirmation ; `--fingerprint TLS:…` sans question), ou Administrer › Serveurs › **Confirmer l'empreinte** dans Portunia (0.94 et suivants). Comparez-la avec celle du certificat « Bureau à distance » du serveur. D'ici là, l'ouverture est refusée (`cible.empreinte_a_confirmer`). Les serveurs dont l'empreinte est déjà mémorisée ne changent pas. Journal : `cible.empreinte_confirmee`.
+
 <a id="rdp-natif"></a>
 
 ### Clients RDP ordinaires : RDP natif (Gate 0.31)
@@ -306,7 +308,7 @@ sudo portunia-gate target list        # protocole, mode, empreinte (« à mémor
 -   **Enregistré** : pareil, avec le compte Windows que l'utilisateur tape dans Portunia en préparant le fichier. La Gate le garde **en mémoire** jusqu'à la connexion du client (au plus la validité du fichier), jamais sur disque, puis l'oublie. Sans compte, seulement pour un serveur qui accepte TLS sans NLA : l'utilisateur se connecte alors dans l'écran de connexion de Windows.
 -   **Certificat** : en coffre et enregistré, le client voit le certificat de l'API de la Gate ; sans certificat d'entreprise, mstsc avertit une fois : comparez l'empreinte affichée dans Administrer › RDP natif (ou `sudo portunia-gate rdp show`). En rebond, il voit celui du serveur Windows.
 -   **Journal** : `rdp_natif.fichier` (fichier préparé, avec ou sans compte), puis les événements habituels de la session, l'adresse suivie de « (natif) » ; refus : `acces.refuse` avec « type » : « rdp natif » et la raison. Un fichier ne sert qu'une fois : la reconnexion automatique du client après une coupure réseau est refusée.
--   **Sans Portunia** (Gate 0.34) : ordinateur = adresse de la Gate et ce port, utilisateur = `compte%serveur` (`compte%serveur%123456` avec le code quand la politique du compte en demande un), mot de passe = **mot de passe RDP** du compte. La Gate les vérifie par NLA, puis ouvre le serveur comme en coffre ou en enregistré (rebond : fichier de Portunia seulement). L'utilisateur crée son mot de passe RDP dans le portail web (*Se connecter avec mstsc ou Windows App*, avec un raccourci .rdp par serveur) ; un administrateur avec `sudo portunia-gate user rdp-password COMPTE` (`--remove` le retire). Il est distinct du mot de passe du compte, scellé par la Gate et affiché une seule fois. Un serveur en enregistré doit accepter une connexion sans NLA (l'utilisateur ouvre sa session dans l'écran de connexion de Windows). Journal : `rdp_natif.mot_de_passe`, et les refus avec leur raison (serveur inconnu, code manquant, trop d'essais…).
+-   **Sans Portunia** (Gate 0.34) : ordinateur = adresse de la Gate et ce port, utilisateur = `compte%serveur` (`compte%serveur%123456` avec le code quand la politique du compte en demande un), mot de passe = **mot de passe RDP** du compte. La Gate les vérifie par NLA (un compte dont la politique exige une clé SSH est refusé depuis la Gate 0.50 : le mot de passe RDP et le code ne la remplacent pas), puis ouvre le serveur comme en coffre ou en enregistré (rebond : fichier de Portunia seulement, et seulement si la règle donne le droit **fichiers** depuis la Gate 0.50 : de bout en bout, la Gate ne peut pas bloquer la copie de fichiers d'un client RDP ordinaire). L'utilisateur crée son mot de passe RDP dans le portail web (*Se connecter avec mstsc ou Windows App*, avec un raccourci .rdp par serveur) ; un administrateur avec `sudo portunia-gate user rdp-password COMPTE` (`--remove` le retire). Il est distinct du mot de passe du compte, scellé par la Gate et affiché une seule fois. Depuis la Gate 0.49, le portail redemande le mot de passe et le code du compte avant de le créer. Un serveur en enregistré doit accepter une connexion sans NLA (l'utilisateur ouvre sa session dans l'écran de connexion de Windows). Journal : `rdp_natif.mot_de_passe`, et les refus avec leur raison (serveur inconnu, code manquant, trop d'essais…).
 
 ```
 sudo portunia-gate rdp set --port 3390 --modes rebond,coffre,enregistre --ticket-seconds 120
@@ -319,7 +321,7 @@ sudo portunia-gate rdp show
 ### Interfaces web (Gate 0.30, coffre 0.32)
 
 -   Pour les consoles d'administration (vCenter, iDRAC, iLO, pare-feu, NAS…) et les applications internes. Protocole **Interface web (HTTPS)** ou **(HTTP)**, adresse et port du serveur ; mode **enregistré** ou **coffre** (pas de rebond : la Gate lit chaque requête). Enregistré : les identifiants de l'application se tapent dans sa page, comme d'habitude.
--   **Coffre** (Gate 0.32) : la Gate connecte l'utilisateur avec le compte du coffre (**Compte sur le serveur** et son mot de passe). Le mot de passe **n'arrive jamais dans le navigateur** : la Gate remplit le formulaire de connexion avec le compte et, dans le champ mot de passe, un jeton à usage unique (10 minutes, pour ce compte et ce serveur seulement) ; quand le navigateur envoie la connexion, quel qu'en soit le format (formulaire, JSON, en-tête HTTP), la Gate remplace le jeton par le mot de passe. **Connexion** : *Remplir le formulaire de connexion et le valider* (par défaut ; aussi pour les applications qui se connectent en JavaScript, et authentification HTTP si le serveur la demande), *Remplir le formulaire seulement* (l'utilisateur clique), ou *Authentification HTTP (Basic)* à chaque requête (équipements qui affichent la fenêtre de connexion du navigateur). Chaque usage du mot de passe est noté au journal (`web.coffre` : serveur, chemin, compte). Limites : une application qui chiffre le mot de passe dans le navigateur, ou demande un second facteur ou un captcha, ne se connecte pas toute seule ; un utilisateur capable de manipuler la page pourrait réutiliser son jeton dans une autre requête dans les 10 minutes, ce que `web.coffre` montre.
+-   **Coffre** (Gate 0.32) : la Gate connecte l'utilisateur avec le compte du coffre (**Compte sur le serveur** et son mot de passe). Le mot de passe **n'arrive jamais dans le navigateur** : la Gate remplit le formulaire de connexion avec le compte et, dans le champ mot de passe, un jeton à usage unique (10 minutes, pour ce compte et ce serveur seulement) ; quand le navigateur envoie la connexion, quel qu'en soit le format (formulaire, JSON, en-tête HTTP), la Gate remplace le jeton par le mot de passe. **Connexion** : *Remplir le formulaire de connexion et le valider* (par défaut ; aussi pour les applications qui se connectent en JavaScript, et authentification HTTP si le serveur la demande), *Remplir le formulaire seulement* (l'utilisateur clique), ou *Authentification HTTP (Basic)* à chaque requête (équipements qui affichent la fenêtre de connexion du navigateur). Chaque usage du mot de passe est noté au journal (`web.coffre` : serveur, chemin, compte). Depuis la Gate 0.49, le jeton n'est remplacé que dans un **envoi de connexion** : méthode POST, formulaire ou JSON, jeton présent une seule fois et valeur entière d'un seul champ « mot de passe » (*pass*, *pwd*, *mdp*, *secret*). Jamais dans l'adresse ni dans un autre champ : une page qui recopierait ce qu'elle reçoit (page 404, recherche) ne peut plus afficher le mot de passe. Un jeton vu ailleurs est détruit et noté (`web.coffre_refuse`) ; si la réponse à une connexion contient malgré tout le mot de passe, la Gate l'y masque (`web.coffre_masque`). Limites : une application qui chiffre le mot de passe dans le navigateur, qui nomme son champ autrement, ou qui demande un second facteur ou un captcha, ne se connecte pas toute seule.
 -   La Gate relaie chaque requête : la règle est revérifiée au plus toutes les 30 secondes, chaque **page ouverte** est notée au journal (`web.page` : serveur, chemin), l'ouverture aussi (`web.ouvert`). Les images, scripts et appels de l'application ne sont pas notés. Ni l'image ni la frappe ne sont enregistrées.
 -   **Sessions web** (Gate 0.35, Portunia 0.74) : chaque compte a une session par serveur web dans *Audit › Sessions* (type `web`), ouverte à la première requête et fermée après 15 minutes sans requête. **Actions** affiche son journal signé : pages, envois (formulaires, modifications), WebSocket et usages du coffre, avec chemin et statut, à filtrer et à chercher ; jamais ce qui est saisi. Journal : `web.session_ouverte`, `web.session_fermee`.
 -   Le certificat d'un serveur HTTPS est vérifié par son empreinte, gardée à la première connexion, comme pour le Bureau à distance.
@@ -397,6 +399,7 @@ La colonne État montre *active*, *hors plage* (en dehors des jours ou heures, e
 -   L'utilisateur demande depuis Portunia (menu **⋯** de la Gate › **Approbations**) ou le portail web, avec un motif et un ticket facultatif.
 -   Les approbateurs sont prévenus par courriel, Teams ou webhook (voir *Notifications*) et par Portunia, qui affiche « Approbations (N en attente) » et une notification du système.
 -   Un approbateur accorde pour 30 minutes à 3 jours, ou refuse, avec un commentaire. Personne n'approuve sa propre demande ; une demande sans réponse expire au bout de 24 heures.
+-   **Depuis le portail web et le téléphone** (Gate 0.51, Portunia 0.94) : un approbateur voit « À décider » dans le portail et accorde (30 minutes à 1 jour) ou refuse. L'application Android Portunia Gate vérifie les demandes toutes les 15 minutes tant que sa session du portail est ouverte (sans la prolonger) et affiche une notification ; la toucher ouvre la liste. Une page d'interface relayée par le portail ne peut pas décider (la décision doit venir d'une page du portail lui-même).
 -   L'utilisateur est prévenu 10 minutes avant la fin (terminal SSH), puis ses sessions se ferment. **Retirer** met fin à un accès accordé.
 
 Journal : `approbation.demandee`, `.accordee`, `.refusee`, `.annulee`, `.terminee`, `.sans_reponse`. En ligne de commande : `rule approval NOM on --approvers GROUPE`, `approval list`, `approval grant ID --minutes 60`.
@@ -471,7 +474,7 @@ Le tunnel ne transporte que du HTTPS : le portail passe, mais pas Portunia (API 
 3.  **Publier dans Cloudflare** avec un jeton d'API Cloudflare (*Account › Cloudflare Tunnel › Edit* et *Zone › DNS › Edit*), utilisé une fois et jamais gardé : la Gate ajoute à son tunnel une route TCP par nom, vers ses propres ports (jamais vers vos serveurs), et crée les enregistrements DNS. Un enregistrement existant n'est jamais écrasé. À la main : *Routes › Add route › Published application*, type TCP, `localhost:8443`, `localhost:2222`, `localhost:3390`, puis **Enregistrer les noms seulement**.
 4.  Le RDP natif doit être ouvert (§7) pour mstsc.
 
-Conseillé : une application **Cloudflare Access** sur ces noms, pour exiger un compte de l'entreprise avant même la Gate. Les connexions arrivent alors à la Gate depuis `127.0.0.1` (cloudflared) : le journal montre cette adresse, et les limites d'essais par adresse portent sur l'ensemble des accès extérieurs, les limites par compte restant entières. En ligne de commande : `sudo portunia-gate portal tcp --api … --ssh … --rdp … --publish`.
+Conseillé : une application **Cloudflare Access** sur ces noms, pour exiger un compte de l'entreprise avant même la Gate. Les connexions arrivent alors à la Gate depuis cloudflared : depuis la Gate 0.50, le SSH publié a son écoute à lui (`127.0.0.1:2224`, variable `PORTUNIA_GATE_SSH_CLOUDFLARE_LISTEN`), ses connexions sont notées `cloudflare` au journal et ont leur propre plafond ; les limites d'essais par adresse portent sur l'ensemble des accès par Cloudflare, les limites par compte restant entières. **Un SSH publié avant la 0.50** pointe encore sur 2222 : republiez-le (bouton **Publier dans Cloudflare**, ou `--publish`) pour passer sur l'écoute dédiée. En ligne de commande : `sudo portunia-gate portal tcp --api … --ssh … --rdp … --publish`.
 
 ### L'écran Portail web
 
@@ -528,6 +531,7 @@ Un dépanneur prend la main sur le PC d'un proche ou d'un client. La personne va
 | Page de la personne aidée | L'adresse à donner, avec un bouton Copier. |
 | Groupe des dépanneurs | Seuls ses membres, connectés à la Gate depuis Portunia, peuvent lancer une assistance. |
 | Durée maximale | 1, 4 ou 8 h (4 h par défaut ; de 1 à 12 h). L'assistance s'arrête d'elle-même ensuite. |
+| Nom et logo de l'entreprise (Gate 0.52) | Portunia Assistance affiche « Assistance ACME » et votre logo à la place de Portunia, dès l'écran du code (éditions Pro et Équipes). PNG de 96 Kio et 512 × 512 pixels au plus. En ligne de commande : `sudo portunia-gate assist set --brand ACME --logo /chemin/logo.png` (`--logo aucun` le retire). |
 
 ### À dire aux personnes aidées
 
@@ -828,6 +832,7 @@ sudo portunia-gate target edit web-01 --host 10.0.1.21 --password      # nouvell
 sudo portunia-gate target secret web-01 --password             # remplace le secret du coffre (ou --key-file)
 sudo portunia-gate target secret app-02 --generate             # SSH : la Gate crée une clé, l'installe avec le mot de passe actuel, l'oublie
 sudo portunia-gate target forget srv-ad-01                     # serveur réinstallé : oublie l'empreinte
+sudo portunia-gate target trust srv-paie                       # Bureau à distance : lit l'empreinte et la mémorise après confirmation (coffre : obligatoire, Gate 0.50)
 sudo portunia-gate target delete fw-edge                       # secret effacé ; sessions et enregistrements gardés
 
 # Règles
@@ -959,6 +964,7 @@ Bureau à distance hors de l'onglet de Portunia : mstsc, Windows App ou Remmina,
 | Variable | Défaut | Sens |
 | --- | --- | --- |
 | `PORTUNIA_GATE_SSH_LISTEN` | `0.0.0.0:2222` | Écoute SSH. |
+| `PORTUNIA_GATE_SSH_CLOUDFLARE_LISTEN` | `127.0.0.1:2224` | Écoute SSH du tunnel Cloudflare (Gate 0.50) : connexions notées « cloudflare », plafond à part. |
 | `PORTUNIA_GATE_API_LISTEN` | `0.0.0.0:8443` | Écoute de l'API. |
 | `PORTUNIA_GATE_PORTAL_LISTEN` | `127.0.0.1:8445` | Portail pour Cloudflare Tunnel. |
 | `PORTUNIA_GATE_PORTAL_TLS_LISTEN` | absent | Écoute HTTPS du portail ; si réglée, l'emporte sur celle choisie dans Administrer › Portail web. |
@@ -981,9 +987,10 @@ Après une modification : `sudo systemctl restart portunia-gate` (coupe les sess
 | Groupes, règles, réglages | `groupe.cree` `groupe.supprime` `groupe.membre_ajoute` `regle.creee` `regle.modifiee` `regle.supprimee` `reglage.modifie` |
 | Serveurs | `cible.creee` `cible.modifiee` `cible.supprimee` `cible.empreinte_memorisee` `cible.empreinte_differente` `cible.empreinte_oubliee` `cible.cle_installee` `cible.coffre_refuse` `cible.identifiants_refuses` |
 | Fichiers (Bureau à distance) | `fichier.copie` (sens, nom, taille, SHA-256, copie gardée) `fichier.bloque` (tentatives retenues faute d'autorisation) |
-| Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.session_ouverte` `web.session_fermee` `navigation.ouverte` `navigation.refusee` `navigation.fermee` |
+| Sessions | `session.ouverte` `session.fermee` `session.suivie` `session.coupee_par` `commande.executee` `sftp.ouvert` `rebond.ouvert` `rebond.ferme` `tunnel.ouvert` `tunnel.ferme` `web.ouvert` `web.page` `web.coffre` `web.coffre_refuse` `web.coffre_masque` `web.session_ouverte` `web.session_fermee` `navigation.ouverte` `navigation.refusee` `navigation.fermee` |
 | Audit | `enregistrement.consulte` `enregistrement.revele` `enregistrement.exporte` |
 | Portail | `portail.connexion` `portail.echec` `portail.active` `portail.desactive` `portail.modifie` `portail.sessions_fermees` |
+| Téléphones | `appareil.enrole` `appareil.refuse` `appareil.retire` `appareil.expire` |
 | Assistance | `assistance.ouverte` `assistance.fermee` `assistance.coupure` `assistance.reprise` `assistance.fichier` `assistance.reglage` `assistance.place_inconnue` `assistance.programme` |
 
 > [!NOTE]
